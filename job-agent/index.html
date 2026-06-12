@@ -239,6 +239,9 @@
   .typing span:nth-child(2) { animation-delay: 0.2s; background: #9B59B6; }
   .typing span:nth-child(3) { animation-delay: 0.4s; background: #6A1B9A; }
   @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+  
+  /* Countdown */
+  .countdown { font-size: 12px; color: #9B59B6; margin-left: 8px; font-weight: 500; }
 
   /* Parsing overlay */
   .parsing-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(245, 240, 255, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
@@ -629,8 +632,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，直接进入匹配流程
       showScreen('chat');
-      addMessage('ai', '正在为你匹配可投递的岗位，请稍候...');
-      showTyping();
+      addMessage('ai', '正在为你匹配可投递的岗位，预计需要20秒，请稍候...');
+      showTyping(20);
 
       // 设置上下文（供后续对话使用）
       if (apiConnected) {
@@ -650,8 +653,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，自动开始诊断
       showScreen('chat');
-      addMessage('ai', '正在为你诊断简历，请稍候...');
-      showTyping();
+      addMessage('ai', '正在为你诊断简历，预计需要30秒，请稍候...');
+      showTyping(30);
 
       // 设置上下文
       if (apiConnected) {
@@ -671,8 +674,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，自动开始同背景去向分析
       showScreen('chat');
-      addMessage('ai', '正在为你分析同背景求职者的去向情况，请稍候...');
-      showTyping();
+      addMessage('ai', '正在为你分析同背景求职者的去向情况，预计需要40秒，请稍候...');
+      showTyping(40);
 
       // 设置上下文
       if (apiConnected) {
@@ -853,17 +856,64 @@ function addMessage(role, text) {
   container.scrollTop = container.scrollHeight;
 }
 
-function showTyping() {
+function showTyping(estimatedSeconds) {
   var container = document.getElementById('chat-messages');
   var div = document.createElement('div');
   div.className = 'msg ai';
   div.id = 'typing-indicator';
-  div.innerHTML = '<div class="avatar ai">职</div><div class="bubble"><div class="bubble-inner"><div class="typing"><span></span><span></span><span></span></div></div></div>';
+  
+  var countdownHtml = '';
+  if (estimatedSeconds && estimatedSeconds > 0) {
+    countdownHtml = '<span class="countdown" id="countdown-timer">预计 ' + estimatedSeconds + ' 秒</span>';
+  }
+  
+  div.innerHTML = '<div class="avatar ai">职</div><div class="bubble"><div class="bubble-inner"><div class="typing"><span></span><span></span><span></span></div>' + countdownHtml + '</div></div>';
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
+  
+  // 启动倒计时
+  if (estimatedSeconds && estimatedSeconds > 0) {
+    startCountdown(estimatedSeconds);
+  }
+}
+
+// 倒计时相关
+var countdownInterval = null;
+var countdownRemaining = 0;
+
+function startCountdown(seconds) {
+  countdownRemaining = seconds;
+  updateCountdownDisplay();
+  
+  countdownInterval = setInterval(function() {
+    countdownRemaining -= 5;
+    if (countdownRemaining <= 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      var timerEl = document.getElementById('countdown-timer');
+      if (timerEl) {
+        timerEl.textContent = '处理中，请耐心等待...';
+      }
+    } else {
+      updateCountdownDisplay();
+    }
+  }, 5000); // 每5秒更新一次
+}
+
+function updateCountdownDisplay() {
+  var timerEl = document.getElementById('countdown-timer');
+  if (timerEl) {
+    timerEl.textContent = '预计还需要 ' + countdownRemaining + ' 秒';
+  }
 }
 
 function removeTyping() {
+  // 清除倒计时定时器
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  
   var el = document.getElementById('typing-indicator');
   if (el) el.remove();
 }
