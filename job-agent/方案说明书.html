@@ -9,262 +9,99 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "PingFang SC", "Microsoft YaHei", "SimSun", sans-serif;
-    font-size: 14px;
-    line-height: 1.8;
+    font-size: 12px;
+    line-height: 1.5;
     color: #333;
     max-width: 800px;
     margin: 0 auto;
-    padding: 40px 50px;
+    padding: 25px 35px;
     background: #fff;
   }
 
-  /* 标题 */
   .main-title {
     text-align: center;
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
     color: #6A1B9A;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     letter-spacing: 2px;
   }
   .sub-title {
     text-align: center;
-    font-size: 13px;
+    font-size: 10px;
     color: #888;
-    margin-bottom: 36px;
+    margin-bottom: 20px;
     border-bottom: 2px solid #E8D5FF;
-    padding-bottom: 20px;
+    padding-bottom: 12px;
   }
 
-  /* 一级标题 */
   h1 {
-    font-size: 18px;
+    font-size: 14px;
     color: #4A148C;
     border-left: 4px solid #9B59B6;
-    padding-left: 12px;
-    margin: 28px 0 14px 0;
+    padding-left: 8px;
+    margin: 16px 0 8px 0;
   }
 
-  /* 二级标题 */
   h2 {
-    font-size: 15px;
+    font-size: 12px;
     color: #7B1FA2;
-    margin: 18px 0 8px 0;
+    margin: 10px 0 4px 0;
   }
 
-  p { margin-bottom: 10px; text-indent: 2em; }
-
+  p { margin-bottom: 5px; text-indent: 2em; }
   .no-indent { text-indent: 0; }
-  .bold { font-weight: 700; color: #333; }
-  .italic { font-style: italic; color: #666; }
 
-  /* 列表 */
-  ul { margin: 8px 0 10px 2em; }
-  li { margin-bottom: 5px; }
+  ul { margin: 3px 0 5px 2em; }
+  li { margin-bottom: 2px; }
 
-  /* 表格 */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0 16px 0;
-    font-size: 13px;
-  }
-  th {
-    background: linear-gradient(135deg, #6A1B9A, #9B59B6);
-    color: #fff;
-    padding: 8px 12px;
-    text-align: left;
-    font-weight: 600;
-  }
-  td {
-    padding: 7px 12px;
-    border: 1px solid #E8D5FF;
-    vertical-align: top;
-  }
-  tr:nth-child(even) td { background: #FAF5FF; }
+  .highlight { background: #FFF9C4; padding: 1px 2px; border-radius: 2px; }
 
-  /* 结尾 */
   .footer {
     text-align: center;
     color: #aaa;
-    margin-top: 40px;
-    padding-top: 16px;
+    margin-top: 25px;
+    padding-top: 10px;
     border-top: 1px solid #eee;
-    font-size: 12px;
+    font-size: 10px;
   }
 
   @media print {
-    body { padding: 20px; }
-    .no-print { display: none; }
+    body { padding: 15px; }
   }
 </style>
 </head>
 <body>
 
 <h1 class="main-title">「职引」AI求职智能匹配智能体</h1>
-<p class="sub-title">方案说明书 · 2026年6月</p>
+<p class="sub-title">方案说明书 · 2026年6月 · 全文约950字</p>
 
-<!-- 一、问题诊断 -->
-<h1>一、问题诊断</h1>
+<!-- 一、问题与设计 -->
+<h1>一、问题与设计</h1>
+<p class="no-indent">大学生求职三大痛点：①<b>信息不对称</b>（简历初筛命中率&lt;20%）；②<b>简历质量差</b>；③<b>规划迷茫</b>。传统方案成本高、响应慢。</p>
+<p class="no-indent"><b>方案</b>：三层架构（展示层HTML/JS、服务层Node.js API、AI层腾讯混元）。降级机制：后端不可用时回退本地匹配。三大功能：①岗位匹配（解析→AI匹配→卡片）；②简历诊断（上传→AI评分→建议）；③去向分析（背景→城市/薪资报告）。三屏交互（首页→上传→对话），紫色+金色主题。</p>
 
-<p><span class="bold no-indent">当前大学生求职面临三大核心痛点：</span></p>
+<!-- 二、AI选型与配置 -->
+<h1>二、AI选型与配置</h1>
+<p class="no-indent"><b>AI工具</b>：腾讯混元（hunyuan-turbos-latest）——中文强、API便捷（OpenAI兼容）、成本可控、生态完善。</p>
+<p class="no-indent"><b>技术栈</b>：前端原生HTML/CSS/JS；后端Node.js+Express；AI腾讯混元。<b>API</b>：/api/upload-resume（上传）、/api/parse-resume（解析）、/api/chat（对话）、/api/health（健康检查）。</p>
 
-<ul>
-  <li><b>信息不对称：</b>求职者难以全面了解自身背景匹配的岗位，海投效率低下，简历初筛命中率不足20%；</li>
-  <li><b>简历质量参差不齐：</b>多数学生缺乏简历撰写经验，无法准确突出自身优势与岗位需求的匹配点；</li>
-  <li><b>职业规划迷茫：</b>不清楚同背景（同学历、同专业）求职者的去向分布，缺乏决策参考数据。</li>
-</ul>
+<!-- 三、迭代与评估 -->
+<h1>三、迭代与评估</h1>
+<p class="no-indent"><b>迭代</b>：v1-v3基础版→优化；v4-v5 LLM接入→三屏重写；v6-v7去向分析→UI美化。<b>评估</b>：功能完整（三大功能+匹配度/评分/报告）；体验优良（三屏≤3次点击，响应式）；技术指标（~1900行，7次提交，8个API）。</p>
 
-<p>传统解决方案依赖人工咨询或通用招聘平台，存在成本高、响应慢、个性化程度低等问题。基于以上痛点，本项目旨在利用AI大模型能力，打造一款面向高校学生的<strong>智能求职助手</strong>。</p>
+<!-- 四、演示模式 vs 实际智能体 -->
+<h1>四、演示模式 vs 实际智能体</h1>
+<p class="no-indent"><span class="highlight">演示模式</span>（公网Demo：https://829a7cbe614e4769ae286797af1599a7.app.codebuddy.work）：检测后端不可用，加载预设模拟数据展示UI效果。<span class="highlight">实际智能体</span>（本地运行<code>node server.js</code>）：连接服务器，调用腾讯混元API实现真实AI分析。</p>
 
-<!-- 二、方案设计 -->
-<h1>二、方案设计</h1>
+<h2>4.1 核心差异</h2>
+<p class="no-indent">①<b>数据来源</b>：演示模式=前端硬编码模拟数据；实际智能体=混元API实时生成。②<b>个性化</b>：演示模式=固定示例（张三，市场营销硕士）；实际智能体=基于用户真实简历动态分析。③<b>响应速度</b>：演示模式=即时（2秒模拟延迟）；实际智能体=3-8秒（API响应）。④<b>适用场景</b>：演示模式=UI展示、评委快速体验；实际智能体=真实使用、效果验证、技术评审。</p>
 
-<h2>2.1 整体架构</h2>
-<p>采用前后端分离架构：前端为单页面应用（SPA），后端基于Node.js + Express框架，通过API调用腾讯混元大模型实现智能化功能。整体分为三层——<b>展示层</b>（HTML/CSS/JS）、<b>服务层</b>（Node.js API）、<b>AI层</b>（腾讯混元大模型）。</p>
+<h2>4.2 演示视频说明</h2>
+<p class="no-indent">提交材料包含<span class="highlight">演示视频</span>（录制本地运行实况），展示真实AI效果：①简历上传后LLM解析过程（/api/parse-resume）；②AI生成岗位匹配卡片（含动态匹配度计算）；③简历诊断报告（AI评分+改进建议）；④同背景去向分析（AI生成城市/薪资/岗位分布）。视频证明系统真正集成了大语言模型，而非仅前端静态页面。</p>
 
-<h2>2.2 核心功能模块</h2>
-
-<table>
-  <tr>
-    <th style="width:22%">功能模块</th>
-    <th style="width:43%">核心能力</th>
-    <th style="width:35%">用户价值</th>
-  </tr>
-  <tr>
-    <td><b>岗位智能匹配</b></td>
-    <td>解析用户背景 → AI检索匹配岗位 → 结构化卡片展示</td>
-    <td>提升初筛命中，减少无效投递</td>
-  </tr>
-  <tr>
-    <td><b>简历优化诊断</b></td>
-    <td>上传简历 → AI逐项评分 → 问题定位+优化建议</td>
-    <td>量化简历质量，提供可执行改进方案</td>
-  </tr>
-  <tr>
-    <td><b>同背景去向分析</b></td>
-    <td>分析用户背景 → 生成城市/薪资/岗位去向报告</td>
-    <td>为城市选择和薪资谈判提供参考</td>
-  </tr>
-</table>
-
-<h2>2.3 交互流程设计</h2>
-<p>采用<b>三屏式交互</b>：首页展示功能卡片 → 简历上传页（支持PDF/DOC/DOCX/TXT）→ AI对话页。系统内置降级机制：当后端服务不可用时，自动回退至本地关键词匹配模式，保证基础可用性。</p>
-<p>UI设计以<strong>紫色(#6A1B9A)</strong>和<strong>金色(#FFD700)</strong>为主色调，搭配白色背景，并添加浮动emoji贴纸、装饰圆点等可爱元素增强趣味性。各功能加载时显示动态倒计时预估（60秒），降低用户等待焦虑。</p>
-
-<!-- 三、AI工具选型理由 -->
-<h1>三、AI工具选型理由</h1>
-
-<p><span class="bold no-indent">本项目的AI能力由腾讯混元大模型（hunyuan-turbos-latest）提供支撑，选型理由如下：</span></p>
-
-<ul>
-  <li><b>中文理解能力强：</b>混元模型在中文语义理解、长文本生成方面表现优异，适合处理简历解析、岗位匹配等中文场景；</li>
-  <li><b>API调用便捷：</b>提供标准的OpenAI兼容接口，集成成本低，支持流式输出提升用户体验；</li>
-  <li><b>成本可控：</b>按token计费模式适合学生项目预算，turbo版本在速度和成本间取得良好平衡；</li>
-  <li><b>生态完善：</b>官方SDK支持Node.js，与本项目技术栈无缝衔接。</li>
-</ul>
-
-<p><span class="italic no-indent">对比其他方案：GPT-4o效果优秀但国内访问受限且成本较高；通义千问和文心一言也是可选方案，但混元在本项目中已验证稳定性和响应速度满足需求。</span></p>
-
-<!-- 四、关键配置 -->
-<h1>四、关键配置</h1>
-
-<h2>4.1 技术栈</h2>
-<ul>
-  <li><b>前端：</b>原生HTML5 + CSS3 + JavaScript（单文件架构，无构建依赖）；</li>
-  <li><b>后端：</b>Node.js 22 + Express 4.x + Multer（文件上传）；</li>
-  <li><b>文件解析：</b>pdf-parse（PDF）、mammoth（DOCX）；</li>
-  <li><b>AI接口：</b>腾讯混元 hunyuan-turbos-latest。</li>
-</ul>
-
-<h2>4.2 API端点设计</h2>
-<table>
-  <tr>
-    <th style="width:30%">端点</th>
-    <th>说明</th>
-  </tr>
-  <tr><td><code>/api/upload-resume</code></td><td>简历文件上传与文本提取</td></tr>
-  <tr><td><code>/api/parse-resume</code></td><td>LLM解析简历为结构化信息</td></tr>
-  <tr><td><code>/api/chat</code></td><td>主对话接口（支持流式输出）</td></tr>
-  <tr><td><code>/api/market-analysis</code></td><td>同背景去向分析</td></tr>
-  <tr><td><code>/api/set-context</code></td><td>用户上下文信息设置</td></tr>
-  <tr><td><code>/api/health</code></td><td>服务健康检查</td></tr>
-</table>
-
-<h2>4.3 提示词工程</h2>
-<p>针对每个功能设计了专用System Prompt和模板化User Prompt。其中同背景去向分析使用独立模块（background-analysis-prompt.js）维护提示词模板，确保输出包含城市分布、薪资区间、岗位情况等结构化信息，并标注数据来源可信度等级。</p>
-
-<!-- 五、迭代记录 -->
-<h1>五、迭代记录</h1>
-
-<table>
-  <tr>
-    <th style="width:12%">版本</th>
-    <th style="width:54%">主要内容</th>
-    <th style="width:34%">交付物</th>
-  </tr>
-  <tr>
-    <td>v1</td>
-    <td>基础版开发：首页 + 聊天界面 + 本地关键词匹配降级</td>
-    <td>index.html + server.js</td>
-  </tr>
-  <tr>
-    <td>v2</td>
-    <td>5项体验改进：打字动画、移动适配、错误提示优化等</td>
-    <td>前端交互优化</td>
-  </tr>
-  <tr>
-    <td>v3</td>
-    <td>Follow-up问题修复与代码规范整改</td>
-    <td>稳定性修复</td>
-  </tr>
-  <tr>
-    <td>v4</td>
-    <td>LLM深度接入：替换硬编码逻辑为AI驱动</td>
-    <td>完整AI对话链路</td>
-  </tr>
-  <tr>
-    <td>v5</td>
-    <td>清空默认画像 + 3屏交互重写 + PDF/DOC上传解析</td>
-    <td>多格式简历支持</td>
-  </tr>
-  <tr>
-    <td>v6</td>
-    <td>同背景去向分析功能实现 + 移除求职计划模块</td>
-    <td>background-analysis-prompt.js</td>
-  </tr>
-  <tr>
-    <td>v7</td>
-    <td>正式版本整理：UI紫色/金色主题美化 + 时间预估 + 文档</td>
-    <td>README / SUBMISSION / CHECKLIST</td>
-  </tr>
-</table>
-
-<!-- 六、效果评估 -->
-<h1>六、效果评估</h1>
-
-<h2>6.1 功能完整性</h2>
-<p>三大核心功能均已实现并可独立运行：岗位匹配输出含匹配度标签的结构化岗位卡片；简历诊断提供评分（满分100）、问题分类和具体修改建议；同背景去向分析输出城市分布热力图、薪资区间表和就业方向建议。</p>
-
-<h2>6.2 用户体验</h2>
-<p>三屏交互流程清晰，从功能选择到结果展示不超过3次点击；60秒倒计时有效管理等待预期；紫色/金色主题配合可爱贴纸元素获得正面视觉反馈；支持PDF/DOC/DOCX/TXT四种主流简历格式。</p>
-
-<h2>6.3 技术指标</h2>
-<ul>
-  <li>代码量约1900行（含注释）；</li>
-  <li>7次Git提交记录完整迭代过程；</li>
-  <li>8个RESTful API端点；</li>
-  <li>内置降级机制保障离线基础可用性；</li>
-  <li>响应式布局适配移动端访问。</li>
-</ul>
-
-<h2>6.4 待改进方向</h2>
-<ul>
-  <li>可接入真实招聘数据源替代AI生成的模拟数据；</li>
-  <li>可增加用户登录和历史记录持久化；</li>
-  <li>可扩展更多文件格式支持（如RTF）；</li>
-  <li>演示视频可作为补充材料进一步展示交互流程。</li>
-</ul>
+<h2>4.3 技术实现</h2>
+<p class="no-indent">演示模式通过<code>apiConnected</code>变量控制：<code>checkApiStatus()</code>调用<code>/api/health</code>，失败则设置<code>apiConnected=false</code>，后续<code>autoMatchJobs()</code>等函数检测到该标志后返回<code>demoResponses</code>预设HTML。实际模式直接<code>fetch('/api/...')</code>调用后端，后端再调用腾讯混元API。公网Demo无法连接本地服务器，故自动进入演示模式；本地运行时可完整展示AI能力。</p>
 
 <div class="footer">— 文档完 —</div>
 
