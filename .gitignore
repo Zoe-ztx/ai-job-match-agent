@@ -1,0 +1,7 @@
+node_modules/
+.workbuddy/
+*.log
+.env
+.DS_Store
+*.tmp
+nofollow

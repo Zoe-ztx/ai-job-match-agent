@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>职引 · AI求职智能匹配智能体</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; background: #f5f7fa; height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header { background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%); color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 14px; font-size: 12px; cursor: pointer; display: none; }
+  .back-btn:hover { background: rgba(255,255,255,0.3); }
+  .api-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
+  .api-status.connected { background: rgba(52,168,83,0.3); color: #a5d6a7; }
+
+  /* Screen 1: Home */
+  .home-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .home-greeting { text-align: center; margin-bottom: 32px; }
+  .home-greeting h2 { font-size: 26px; color: #202124; margin-bottom: 8px; }
+  .home-greeting p { font-size: 14px; color: #5f6368; }
+  .func-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 560px; width: 100%; }
+  .func-card { background: white; border-radius: 14px; padding: 24px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.25s; border: 2px solid transparent; }
+  .func-card:hover { border-color: #1a73e8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,115,232,0.15); }
+  .func-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+  .func-card:nth-child(1) .func-icon { background: #e8f0fe; }
+  .func-card:nth-child(2) .func-icon { background: #e6f4ea; }
+  .func-card:nth-child(3) .func-icon { background: #fef7e0; }
+  .func-card:nth-child(4) .func-icon { background: #fce8e6; }
+  .func-title { font-size: 16px; font-weight: 600; color: #202124; margin-bottom: 6px; }
+  .func-desc { font-size: 12px; color: #5f6368; line-height: 1.5; }
+
+  /* Screen 2: Resume Upload */
+  .resume-screen { flex: 1; display: none; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
+  .resume-step { max-width: 520px; width: 100%; }
+  .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #dadce0; transition: background 0.3s; }
+  .step-dot.active { background: #1a73e8; }
+  .step-dot.done { background: #34a853; }
+  .resume-title { font-size: 20px; font-weight: 600; color: #202124; margin-bottom: 8px; }
+  .resume-subtitle { font-size: 13px; color: #5f6368; margin-bottom: 24px; line-height: 1.5; }
+  .upload-zone { border: 2px dashed #dadce0; border-radius: 14px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: white; margin-bottom: 16px; }
+  .upload-zone:hover { border-color: #1a73e8; background: #f8f9ff; }
+  .upload-zone.dragover { border-color: #1a73e8; background: #e8f0fe; }
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .upload-text { font-size: 14px; color: #5f6368; margin-bottom: 8px; }
+  .upload-hint { font-size: 12px; color: #80868b; }
+  .upload-success { background: #e6f4ea; border: 1px solid #34a853; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .upload-success .check { color: #34a853; font-size: 20px; }
+  .or-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #80868b; font-size: 12px; }
+  .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: #dadce0; }
+  .paste-area { width: 100%; min-height: 140px; border: 1px solid #ddd; border-radius: 10px; padding: 12px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; }
+  .paste-area:focus { border-color: #1a73e8; }
+  .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .action-btn.primary { background: #1a73e8; color: white; }
+  .action-btn.primary:hover { background: #1557b0; }
+  .action-btn.primary:disabled { background: #dadce0; cursor: not-allowed; }
+  .action-btn.secondary { background: white; color: #1a73e8; border: 1px solid #1a73e8; }
+  .action-btn.secondary:hover { background: #e8f0fe; }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* Confirm Info */
+  .info-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 16px; }
+  .info-section { margin-bottom: 16px; }
+  .info-section:last-child { margin-bottom: 0; }
+  .info-label { font-size: 12px; color: #80868b; margin-bottom: 4px; font-weight: 600; }
+  .info-value { font-size: 14px; color: #202124; padding: 8px 12px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 36px; line-height: 1.5; }
+  .info-value[contenteditable]:focus { outline: none; border-color: #1a73e8; background: white; }
+  .edit-hint { font-size: 11px; color: #1a73e8; margin-top: 12px; }
+
+  /* Screen 3: Chat */
+  .chat-screen { flex: 1; display: none; flex-direction: column; }
+  .chat-screen.active { display: flex; }
+  .func-banner { background: #e8f0fe; padding: 10px 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1a73e8; font-weight: 600; }
+  .chat-container { flex: 1; overflow-y: auto; padding: 16px; }
+  .msg { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; }
+  .msg.user { flex-direction: row-reverse; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .avatar.ai { background: #1a73e8; color: white; }
+  .avatar.user { background: #34a853; color: white; }
+  .bubble { max-width: 80%; background: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .msg.user .bubble { background: #1a73e8; color: white; }
+  .bubble-inner { font-size: 14px; line-height: 1.6; }
+  .bubble-inner strong { color: #1a73e8; }
+  .msg.user .bubble-inner strong { color: white; }
+  .bubble-time { font-size: 11px; color: #999; margin-top: 6px; }
+  .msg.user .bubble-time { color: rgba(255,255,255,0.7); text-align: right; }
+  .input-area { background: white; border-top: 1px solid #e0e0e0; padding: 12px 16px; display: flex; gap: 8px; align-items: flex-end; }
+  .input-area textarea { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 10px 16px; font-size: 14px; resize: none; outline: none; min-height: 40px; max-height: 100px; font-family: inherit; }
+  .input-area textarea:focus { border-color: #1a73e8; }
+  .input-area textarea:disabled { background: #f5f5f5; color: #999; }
+  .send-btn { background: #1a73e8; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .send-btn:hover { background: #1557b0; }
+  .send-btn:disabled { background: #dadce0; cursor: not-allowed; }
+  .send-btn svg { width: 20px; height: 20px; }
+
+  /* Job Card */
+  .job-card { background: #f8f9ff; border: 1px solid #e8edf5; border-radius: 10px; padding: 14px; margin: 10px 0; }
+  .job-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .job-title { font-size: 15px; font-weight: 600; color: #202124; }
+  .match-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+  .match-high { background: #e6f4ea; color: #137333; }
+  .match-mid { background: #fef7e0; color: #b06000; }
+  .match-low { background: #fce8e6; color: #c5221f; }
+  .job-meta { font-size: 12px; color: #5f6368; margin: 4px 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .job-source { display: flex; align-items: center; gap: 4px; color: #1a73e8; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .tag { padding: 3px 10px; background: white; border: 1px solid #dadce0; border-radius: 12px; font-size: 11px; color: #5f6368; }
+  .tag.match { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; }
+  .tag.unmatch { background: #fce8e6; border-color: #d93025; color: #c5221f; }
+  .section-title { font-size: 13px; font-weight: 600; color: #202124; margin: 10px 0 6px; }
+  .match-item, .unmatch-item, .gap-item { font-size: 12px; color: #5f6368; margin: 4px 0; padding-left: 16px; position: relative; }
+  .match-item:before { content: "\2713"; position: absolute; left: 0; color: #34a853; font-weight: 700; }
+  .unmatch-item:before { content: "\2717"; position: absolute; left: 0; color: #ea4335; font-weight: 700; }
+  .gap-item:before { content: "\2192"; position: absolute; left: 0; color: #fbbc04; font-weight: 700; }
+  .stats-card { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin: 8px 0; }
+  .stats-source { font-size: 11px; color: #80868b; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+  .apply-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8edf5; text-align: right; }
+  .apply-btn { display: inline-block; background: #1a73e8; color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: background 0.2s; }
+  .apply-btn:hover { background: #1557b0; }
+
+  /* Typing */
+  .typing { display: flex; gap: 4px; padding: 4px 0; }
+  .typing span { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: typing 1.4s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+  /* Parsing overlay */
+  .parsing-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+  .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .parsing-text { font-size: 14px; color: #5f6368; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" id="back-btn" onclick="goHome()">&#8592; 返回</button>
+    <h1>职引</h1>
+  </div>
+  <span class="api-status" id="api-status">检查中...</span>
+</div>
+
+<!-- Screen 1: Home -->
+<div class="home-screen" id="screen-home">
+  <div class="home-greeting">
+    <h2>你好，我是职引</h2>
+    <p>你的AI求职智能匹配助手，请选择你需要的服务</p>
+  </div>
+  <div class="func-grid">
+    <div class="func-card" onclick="selectFunc('match')">
+      <div class="func-icon">&#127919;</div>
+      <div class="func-title">岗位智能匹配</div>
+      <div class="func-desc">上传简历，AI为你匹配最合适的岗位，分析匹配度与补强建议</div>
+    </div>
+    <div class="func-card" onclick="selectFunc('resume')">
+      <div class="func-icon">&#128221;</div>
+      <div class="func-title">简历优化诊断</div>
+      <div class="func-desc">AI分析简历不足，给出针对性改进建议和改写示例</div>
+    </div>
+    <div class="func-card" onclick="selectFunc('market')">
+      <div class="func-icon">&#128202;</div>
+      <div class="func-title">市场竞争分析</div>
+      <div class="func-desc">了解同背景求职者的市场定位、去向和竞争格局</div>
+    </div>
+    <div class="func-card" onclick="selectFunc('plan')">
+      <div class="func-icon">&#128197;</div>
+      <div class="func-title">求职计划制定</div>
+      <div class="func-desc">根据你的情况制定个性化求职时间表和投递策略</div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 2: Resume Upload (岗位匹配专用) -->
+<div class="resume-screen" id="screen-resume">
+  <div class="resume-step">
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div id="resume-step1">
+      <div class="resume-title">上传你的简历</div>
+      <div class="resume-subtitle">AI将自动提取简历中的关键信息，然后让你确认和补充</div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+        <div class="upload-icon">&#128196;</div>
+        <div class="upload-text">点击上传或拖拽文件到此处</div>
+        <div class="upload-hint">支持 .txt / .pdf / .doc / .docx 格式</div>
+      </div>
+      <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx" style="display:none" onchange="handleFile(this.files[0])">
+      <div id="upload-result" class="hidden"></div>
+      <div class="or-divider">或者直接粘贴简历内容</div>
+      <textarea class="paste-area" id="paste-area" placeholder="将简历文字内容粘贴到此处..."></textarea>
+      <div class="btn-row">
+        <button class="action-btn primary" id="parse-btn" onclick="parseResume()" disabled>AI 解析简历</button>
+        <button class="action-btn secondary" onclick="skipResume()">跳过，手动填写</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm Info -->
+    <div id="resume-step2" class="hidden">
+      <div class="resume-title">确认你的信息</div>
+      <div class="resume-subtitle">AI已从简历中提取以下信息，请检查并补充缺失项（点击文字可直接编辑）</div>
+      <div class="info-card">
+        <div class="info-section">
+          <div class="info-label">学历背景</div>
+          <div class="info-value" contenteditable="true" id="info-edu">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">技术技能</div>
+          <div class="info-value" contenteditable="true" id="info-skills">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">项目经历</div>
+          <div class="info-value" contenteditable="true" id="info-projects">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">实习/工作经历</div>
+          <div class="info-value" contenteditable="true" id="info-intern">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">期望薪资范围</div>
+          <div class="info-value" contenteditable="true" id="info-salary">未填写</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">意向城市</div>
+          <div class="info-value" contenteditable="true" id="info-city">未填写</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">求职方向</div>
+          <div class="info-value" contenteditable="true" id="info-direction">未填写</div>
+        </div>
+      </div>
+      <div class="edit-hint">&#9998; 点击任意字段可直接编辑内容</div>
+      <div class="btn-row">
+        <button class="action-btn secondary" onclick="goResumeStep1()">&#8592; 重新上传</button>
+        <button class="action-btn primary" onclick="confirmInfo()">确认信息，开始匹配</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 3: Chat -->
+<div class="chat-screen" id="screen-chat">
+  <div class="func-banner" id="func-banner">
+    <span id="func-banner-icon">&#127919;</span>
+    <span id="func-banner-text">岗位智能匹配</span>
+  </div>
+  <div class="chat-container" id="chat-messages"></div>
+  <div class="input-area">
+    <textarea id="chat-input" placeholder="输入你的问题..." oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitMsg();}"></textarea>
+    <button class="send-btn" id="send-btn" onclick="submitMsg()">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ===== Global State =====
+let currentFunc = null;
+let apiConnected = false;
+let isSending = false;
+const sessionId = 'session_' + Date.now();
+
+// ===== Screen Navigation =====
+function showScreen(name) {
+  document.getElementById('screen-home').style.display = name === 'home' ? 'flex' : 'none';
+  document.getElementById('screen-resume').style.display = name === 'resume' ? 'flex' : 'none';
+  document.getElementById('screen-chat').style.display = name === 'chat' ? 'flex' : 'none';
+  document.getElementById('back-btn').style.display = name === 'home' ? 'none' : 'inline-block';
+}
+
+function goHome() {
+  currentFunc = null;
+  showScreen('home');
+}
+
+function selectFunc(func) {
+  currentFunc = func;
+  if (func === 'match') {
+    resetResumeFlow();
+    showScreen('resume');
+  } else {
+    enterChat(func);
+  }
+}
+
+// ===== Resume Flow =====
+function resetResumeFlow() {
+  document.getElementById('file-input').value = '';
+  document.getElementById('paste-area').value = '';
+  document.getElementById('parse-btn').disabled = true;
+  document.getElementById('upload-result').classList.add('hidden');
+  document.getElementById('upload-result').innerHTML = '';
+  document.getElementById('resume-step1').classList.remove('hidden');
+  document.getElementById('resume-step2').classList.add('hidden');
+  document.getElementById('dot1').className = 'step-dot active';
+  document.getElementById('dot2').className = 'step-dot';
+  document.getElementById('dot3').className = 'step-dot';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+var uploadedFileName = '';
+
+function handleFile(file) {
+  if (!file) return;
+  var resultEl = document.getElementById('upload-result');
+  resultEl.classList.remove('hidden');
+  resultEl.innerHTML = '<div class="upload-success"><span class="check">&#10003;</span><span>' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)</span></div>';
+
+  if (file.name.endsWith('.txt')) {
+    // txt 直接在浏览器读取
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('paste-area').value = e.target.result;
+      document.getElementById('parse-btn').disabled = false;
+      uploadedFileName = file.name;
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    // PDF / DOC / DOCX 上传到后端解析
+    uploadedFileName = file.name;
+    document.getElementById('parse-btn').disabled = true;
+    document.getElementById('parse-btn').textContent = '上传解析中...';
+
+    var formData = new FormData();
+    formData.append('resume', file);
+
+    fetch('/api/upload-resume', {
+      method: 'POST',
+      body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; ' + data.error + '</div>';
+      } else {
+        document.getElementById('paste-area').value = data.text;
+        resultEl.innerHTML = '<div class="upload-success"><span class="check">&#10003;</span><span>' + file.name + ' — 解析成功，已提取 ' + data.text.length + ' 字</span></div>';
+      }
+      document.getElementById('parse-btn').disabled = !document.getElementById('paste-area').value.trim();
+      document.getElementById('parse-btn').textContent = 'AI 解析简历';
+    })
+    .catch(function(err) {
+      resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; 上传失败：' + err.message + '</div>';
+      document.getElementById('parse-btn').disabled = true;
+      document.getElementById('parse-btn').textContent = 'AI 解析简历';
+    });
+  }
+}
+
+document.getElementById('paste-area').addEventListener('input', function() {
+  document.getElementById('parse-btn').disabled = !this.value.trim();
+});
+
+async function parseResume() {
+  var text = document.getElementById('paste-area').value.trim();
+  if (!text) return;
+
+  showParsingOverlay('AI正在解析你的简历...');
+  console.log('[parseResume] apiConnected=', apiConnected, 'textLength=', text.length);
+
+  try {
+    var res = await fetch('/api/parse-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resumeText: text, sessionId: sessionId })
+    });
+    var data = await res.json();
+    console.log('[parseResume] response:', data);
+
+    if (data.error) throw new Error(data.error);
+    if (!data.parsed) throw new Error('后端未返回解析数据');
+
+    hideParsingOverlay();
+    showConfirmStep(data.parsed);
+  } catch (err) {
+    console.error('[parseResume] error:', err);
+    hideParsingOverlay();
+    // 显示错误提示在页面上
+    var resultEl = document.getElementById('upload-result');
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; 解析失败：' + err.message + '<br>已切换到本地解析，请检查并补充信息。</div>';
+    showConfirmStep(localParseResume(text));
+  }
+}
+
+function localParseResume(text) {
+  var info = { edu: '', skills: '', projects: '', intern: '', salary: '', city: '', direction: '' };
+  var eduMatch = text.match(/[\u4e00-\u9fa5]*[\u5927\u5b66\u5b66\u9662][\u4e00-\u9fa5]*/);
+  if (eduMatch) info.edu = eduMatch[0];
+  var skillKeywords = ['Java', 'Python', 'C++', 'JavaScript', 'SQL', 'Spring', 'React', 'Vue', 'MySQL', 'Redis', 'Docker', 'Git'];
+  var found = skillKeywords.filter(function(s) { return text.includes(s); });
+  if (found.length > 0) info.skills = found.join(' / ');
+  return info;
+}
+
+function showParsingOverlay(msg) {
+  var overlay = document.createElement('div');
+  overlay.className = 'parsing-overlay';
+  overlay.id = 'parsing-overlay';
+  overlay.innerHTML = '<div class="spinner"></div><div class="parsing-text">' + msg + '</div>';
+  document.body.appendChild(overlay);
+}
+
+function hideParsingOverlay() {
+  var el = document.getElementById('parsing-overlay');
+  if (el) el.remove();
+}
+
+function showConfirmStep(parsedInfo) {
+  document.getElementById('resume-step1').classList.add('hidden');
+  document.getElementById('resume-step2').classList.remove('hidden');
+  document.getElementById('dot1').className = 'step-dot done';
+  document.getElementById('dot2').className = 'step-dot active';
+
+  var fields = ['edu', 'skills', 'projects', 'intern', 'salary', 'city', 'direction'];
+  var defaults = ['未识别', '未识别', '未识别', '未识别', '未填写', '未填写', '未填写'];
+  for (var i = 0; i < fields.length; i++) {
+    var val = parsedInfo[fields[i]];
+    document.getElementById('info-' + fields[i]).textContent = (val && val.trim()) ? val.trim() : defaults[i];
+  }
+}
+
+function goResumeStep1() {
+  document.getElementById('resume-step1').classList.remove('hidden');
+  document.getElementById('resume-step2').classList.add('hidden');
+  document.getElementById('dot1').className = 'step-dot active';
+  document.getElementById('dot2').className = 'step-dot';
+}
+
+function skipResume() {
+  showConfirmStep({ edu: '', skills: '', projects: '', intern: '', salary: '', city: '', direction: '' });
+}
+
+async function confirmInfo() {
+  var userInfo = {
+    edu: document.getElementById('info-edu').textContent.trim(),
+    skills: document.getElementById('info-skills').textContent.trim(),
+    projects: document.getElementById('info-projects').textContent.trim(),
+    intern: document.getElementById('info-intern').textContent.trim(),
+    salary: document.getElementById('info-salary').textContent.trim(),
+    city: document.getElementById('info-city').textContent.trim(),
+    direction: document.getElementById('info-direction').textContent.trim()
+  };
+
+  document.getElementById('dot2').className = 'step-dot done';
+  document.getElementById('dot3').className = 'step-dot active';
+
+  if (apiConnected) {
+    try {
+      await fetch('/api/set-context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: 'match' })
+      });
+    } catch (e) {
+      console.error('set-context error:', e);
+    }
+  }
+
+  enterChat('match', userInfo);
+}
+
+// ===== Chat =====
+function enterChat(func, userInfo) {
+  currentFunc = func;
+  var banners = {
+    match: { icon: '&#127919;', text: '岗位智能匹配' },
+    resume: { icon: '&#128221;', text: '简历优化诊断' },
+    market: { icon: '&#128202;', text: '市场竞争分析' },
+    plan: { icon: '&#128197;', text: '求职计划制定' }
+  };
+  var b = banners[func] || banners.match;
+  document.getElementById('func-banner-icon').innerHTML = b.icon;
+  document.getElementById('func-banner-text').textContent = b.text;
+  document.getElementById('chat-messages').innerHTML = '';
+
+  var welcome = '';
+  if (func === 'match') {
+    if (userInfo) {
+      // 已确认信息，直接进入匹配流程
+      showScreen('chat');
+      addMessage('ai', '正在为你匹配可投递的岗位，请稍候...');
+      showTyping();
+
+      // 设置上下文（供后续对话使用）
+      if (apiConnected) {
+        fetch('/api/set-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: 'match' })
+        }).catch(function(e) { console.error('set-context error:', e); });
+      }
+
+      autoMatchJobs(userInfo);
+      return;
+    } else {
+      welcome = '你好！我是你的<strong>岗位匹配助手</strong>。请告诉我你的背景信息，我来帮你匹配最合适的岗位。<br><br>你可以告诉我：学历和专业、技术技能、项目和实习经历、期望薪资和意向城市';
+    }
+  } else if (func === 'resume') {
+    welcome = '你好！我是你的<strong>简历优化助手</strong>。请上传你的简历或告诉我你想优化哪个部分，我会给出具体的改进建议和改写示例。';
+  } else if (func === 'market') {
+    welcome = '你好！我是你的<strong>市场分析助手</strong>。请告诉我你的背景信息，我来帮你分析同背景求职者在市场中的定位和竞争格局。<br><br>例如：<br>&#8226; "211计算机本科 在市场上竞争力如何"<br>&#8226; "同背景的同学都去了哪些公司"';
+  } else if (func === 'plan') {
+    welcome = '你好！我是你的<strong>求职规划助手</strong>。请告诉我你的情况，我来帮你制定个性化的求职时间表和投递策略。';
+  }
+
+  addMessage('ai', welcome);
+  showScreen('chat');
+  document.getElementById('chat-input').focus();
+}
+
+// 自动匹配岗位
+async function autoMatchJobs(userInfo) {
+  if (!apiConnected) {
+    removeTyping();
+    addMessage('ai', '当前未连接LLM服务，请配置API Key后再试。');
+    return;
+  }
+
+  try {
+    setSending(true);
+    var res = await fetch('/api/match-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInfo: userInfo, sessionId: sessionId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    removeTyping();
+    addMessage('ai', data.reply);
+  } catch (e) {
+    removeTyping();
+    addMessage('ai', '抱歉，岗位匹配请求出错了：' + e.message);
+    console.error('Auto match error:', e);
+  } finally {
+    setSending(false);
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+async function submitMsg() {
+  if (isSending) return;
+  var el = document.getElementById('chat-input');
+  var text = el.value.trim();
+  if (!text) return;
+  el.value = '';
+  el.style.height = 'auto';
+
+  addMessage('user', text);
+  showTyping();
+  setSending(true);
+
+  try {
+    var reply;
+    if (apiConnected) {
+      var res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId: sessionId, mode: currentFunc })
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      reply = data.reply;
+    } else {
+      reply = getLocalReply(text);
+    }
+    removeTyping();
+    addMessage('ai', reply);
+  } catch (err) {
+    removeTyping();
+    addMessage('ai', '抱歉，请求出错了：' + err.message);
+  } finally {
+    setSending(false);
+  }
+}
+
+function setSending(val) {
+  isSending = val;
+  document.getElementById('send-btn').disabled = val;
+  document.getElementById('chat-input').disabled = val;
+}
+
+function addMessage(role, text) {
+  var container = document.getElementById('chat-messages');
+  var now = new Date();
+  var time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+  // 清理LLM返回的markdown代码标记（如 ```html ... ```）
+  var cleanText = text;
+  if (role === 'ai') {
+    // 去掉开头的 ```html 或 ```
+    cleanText = cleanText.replace(/^```(?:html)?\s*\n?/i, '');
+    // 去掉结尾的 ```
+    cleanText = cleanText.replace(/\n?```\s*$/i, '');
+    // 去掉可能残留的其他代码块标记
+    cleanText = cleanText.trim();
+  }
+
+  var div = document.createElement('div');
+  div.className = 'msg ' + role;
+  var avatar = role === 'ai' ? '<div class="avatar ai">职</div>' : '<div class="avatar user">我</div>';
+  div.innerHTML = avatar + '<div class="bubble"><div class="bubble-inner">' + cleanText + '</div><div class="bubble-time">' + time + '</div></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+  var container = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="avatar ai">职</div><div class="bubble"><div class="bubble-inner"><div class="typing"><span></span><span></span><span></span></div></div></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  var el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function fillInput(text) {
+  var el = document.getElementById('chat-input');
+  el.value = text;
+  el.focus();
+  autoResize(el);
+}
+
+// ===== Local Fallback =====
+function getLocalReply(text) {
+  return '我是职引助手。当前未连接LLM服务，请在服务器端配置API Key后重试。<br><br>你可以运行：<br><code>export LLM_PROVIDER=hunyuan</code><br><code>export HUNYUAN_API_KEY=你的密钥</code><br><code>node server.js</code>';
+}
+
+// ===== API Status Check =====
+async function checkApiStatus() {
+  var statusEl = document.getElementById('api-status');
+  try {
+    var res = await fetch('/api/health');
+    var data = await res.json();
+    if (data.apiKeyConfigured) {
+      apiConnected = true;
+      statusEl.textContent = 'LLM已连接';
+      statusEl.className = 'api-status connected';
+    } else {
+      apiConnected = false;
+      statusEl.textContent = '未连接LLM';
+      statusEl.className = 'api-status disconnected';
+    }
+  } catch (e) {
+    apiConnected = false;
+    statusEl.textContent = '服务器离线';
+    statusEl.className = 'api-status disconnected';
+  }
+}
+
+// ===== 测试模式：跳过上传/解析，直接进对话 =====
+var TEST_USER_INFO = {
+  edu: '香港城市大学 市场营销 硕士',
+  skills: 'Python / PS / 剪映 / 市场营销 / 数据分析',
+  projects: '校园招聘数据分析项目',
+  intern: '无',
+  salary: '15k-22k',
+  city: '深圳',
+  direction: '市场营销'
+};
+
+// ===== Init =====
+window.addEventListener('load', async function() {
+  await checkApiStatus();
+
+  // 检查是否是测试模式：URL加 ?test=1 直接跳到对话
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('test') === '1') {
+    // 直接进入聊天匹配，跳过上传和确认
+    enterChat('match', TEST_USER_INFO);
+  } else {
+    showScreen('home');
+  }
+});
+</script>
+
+</body>
+</html>

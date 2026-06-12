@@ -1,0 +1,15 @@
+{
+  "name": "job-agent",
+  "version": "1.0.0",
+  "description": "AI求职智能匹配智能体 - 课程作业演示",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mammoth": "^1.12.0",
+    "multer": "^2.1.1",
+    "pdf-parse": "^1.1.1"
+  }
+}
