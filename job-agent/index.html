@@ -732,9 +732,188 @@ function enterChat(func, userInfo) {
 // ===== Demo Mode Data（服务器离线时的演示数据）=====
 var DEMO_MODE = true; // 离线时启用演示模式
 var demoResponses = {
-  match: '<div class="job-card"><div class="job-card-header"><span class="job-title">🎯 产品经理（应届生方向）</span><span class="match-badge match-high">高匹配</span></div><div class="job-meta">💰 15K-25K · 📍 上海/深圳/北京</div><div class="tags"><span class="tag">产品思维</span><span class="tag">数据分析</span><span class="tag">用户研究</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">💡 AI产品运营专员</span><span class="match-badge match-high">高匹配</span></div><div class="job-meta">💰 12K-20K · 📍 杭州/上海/广州</div><div class="tags"><span class="tag">AI工具应用</span><span class="tag">内容运营</span><span class="tag">竞品分析</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">📊 数据分析师（入门级）</span><span class="match-badge match-mid">中匹配</span></div><div class="job-meta">💰 10K-18K · 📍 北京/成都/武汉</div><div class="tags"><span class="tag">Excel/PPT</span><span class="tag">Python基础</span><span class="tag">数据可视化</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">✍️ 新媒体内容策划</span><span class="match-badge match-mid">中匹配</span></div><div class="job-meta">💰 8K-15K · 📍 全国多地</div><div class="tags"><span class="tag">文案写作</span><span class="tag">视频剪辑</span><span class="tag">创意策划</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><br><p style="color:#7B1FA2;font-size:13px;">🔍 <b>匹配说明：</b>以上岗位根据你的背景信息智能推荐。建议优先投递<b>「高匹配」</b>岗位，同时补充相关技能提升「中匹配」>岗位的竞争力。<br><br>💡 <b>下一步建议：</b>我可以帮你进一步分析某个具体岗位的JD要求，或优化你的简历来提高匹配度！</p>',
-  resume: '<div class="diagnose-report"><h3 style="color:#4A148C;margin-bottom:12px;">📋 简历诊断报告</h3><div class="diagnose-section"><b style="color:#6A1B9A;">综合评分</b><div class="diagnose-score-bar"><div class="diagnose-score-fill" style="width:72%"></div><span class="diagnose-score">72 / 100</span></div></div><div class="diagnose-section"><b style="color:#6A1B9A;">✅ 优势项</b><div class="issue-item issue-good"><b>教育背景清晰</b> — 学历和专业信息完整，符合目标岗位基本要求</div><div class="issue-item issue-good"><b>技能关键词丰富</b> — 涵盖技术、工具、语言等多维度能力描述</div></div><div class="diagnose-section"><b style="color:#c5221f;">⚠️ 待改进</b><div class="issue-item issue-error"><b>缺少量化成果</b> — 实习经历中未体现具体数据和可衡量结果<br><span class="fix-hint">→ 建议：用数字说话，如"提升XX%"、"处理XX条数据"</span></div><div class="issue-item issue-warn"><b>项目经验描述偏简</b> — 缺少项目背景、角色、方法论和产出物<br><span class="fix-hint">→ 建议采用STAR法则重构：情境→任务→行动→结果</span></div><div class="issue-item issue-warn"><b>缺少与目标岗位的关键词对齐</b> — 未针对投递方向定制化调整<br><span class="fix-hint">→ 建议提取目标JD中的核心关键词融入简历</span></div></div><div class="diagnose-section"><b style="color:#6A1B9A;">💡 改写示例</b><div class="rewrite-card"><b>原句：</b>"负责公众号内容运营"<br><br><b>优化后：</b>"独立负责公众号内容运营，<b style="color:#137333;">3个月内产出原创文章20篇，累计阅读量突破5W+，粉丝增长40%</b>"</div></div></div><br><p style="color:#7B1FA2;font-size:13px;">📌 以上为AI智能诊断结果。如需进一步优化某个模块，可以告诉我具体想改进的部分！</p>',
-  market: '<div class="background-report">...（同背景去向分析报告）...</div>'
+  match: `
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">🎯 产品经理（应届生方向）</span><span class="match-badge match-high">高匹配 92%</span></div>
+  <div class="job-meta">💰 15K-25K · 📍 上海/深圳/北京</div>
+  <div class="tags"><span class="tag">产品思维</span><span class="tag">数据分析</span><span class="tag">用户研究</span></div>
+  <div style="margin-top:8px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;">
+    <b style="color:#137333;">✅ 匹配理由：</b>你的市场营销硕士背景+数据分析能力+AI项目经验，与产品经理岗位的核心要求高度吻合。特别是你的AI智能体开发经历，在AI产品赛道极具竞争力。
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;">立即投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">💡 AI产品运营专员</span><span class="match-badge match-high">高匹配 88%</span></div>
+  <div class="job-meta">💰 12K-20K · 📍 杭州/上海/广州</div>
+  <div class="tags"><span class="tag">AI工具应用</span><span class="tag">内容运营</span><span class="tag">竞品分析</span></div>
+  <div style="margin-top:8px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;">
+    <b style="color:#137333;">✅ 匹配理由：</b>你熟悉ChatGPT/文心一言等AI工具，加上新媒体运营实习经验和内容策划能力，完全契合当前企业对"AI+运营"复合型人才的需求。
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;">立即投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">📊 数据分析师（入门级）</span><span class="match-badge match-mid">中匹配 68%</span></div>
+  <div class="job-meta">💰 10K-18K · 📍 北京/成都/武汉</div>
+  <div class="tags"><span class="tag">Excel/PPT</span><span class="tag">Python基础</span><span class="tag">数据可视化</span></div>
+  <div style="margin-top:8px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;">
+    <b style="color:#b06000;">⚠️ 部分匹配：</b>你有基础的数据分析能力，但Python和SQL深度不够。<br><b style="color:#c5221f;">→ 建议：补充SQL查询能力 + 学习Tableau/PowerBI可视化工具，可提升至高匹配。</b>
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;" style="background:linear-gradient(135deg,#9B59B6,#B39DDB);">提升后投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">✍️ 新媒体内容策划</span><span class="match-badge match-mid">中匹配 72%</span></div>
+  <div class="job-meta">💰 8K-15K · 📍 全国多地</div>
+  <div class="tags"><span class="tag">文案写作</span><span class="tag">视频剪辑</span><span class="tag">创意策划</span></div>
+  <div style="margin-top:8px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;">
+    <b style="color:#b06000;">⚠️ 部分匹配：</b>实习中的公众号运营经验直接相关，但该岗位薪资天花板较低。<br><b style="color:#c5221f;">→ 建议：作为保底选项优先投递，同时冲刺产品/AI运营类高薪岗位。</b>
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;" style="background:linear-gradient(135deg,#9B59B6,#B39DDB);">保底投递 →</a>
+</div>
+
+<br>
+<div style="background:linear-gradient(135deg,#F5F0FF,#E8D5FF);border-radius:12px;padding:16px;margin-top:16px;">
+<h4 style="color:#4A148C;margin-bottom:10px;">🔍 综合匹配分析与建议</h4>
+<table style="width:100%;font-size:13px;border-collapse:collapse;">
+<tr style="background:#E8D5FF;"><td style="padding:6px 10px;"><b>你的核心优势</b></td><td style="padding:6px 10px;">硕士学历 / AI工具经验 / 全栈运营能力 / 数据敏感度</td></tr>
+<tr><td style="padding:6px 10px;"><b>需提升项</b></td><td style="padding:6px 10px;">SQL进阶 / 产品原型设计(Figma) / A/B测试方法论</td></tr>
+<tr style="background:#E8D5FF;"><td style="padding:6px 10px;"><b>推荐投递策略</b></td><td style="padding:6px 10px;">高匹配(2个)优先投递 → 中匹配(2个)补充技能后跟进</td></tr>
+<tr><td style="padding:6px 10px;"><b>最佳求职时间窗口</b></td><td style="padding:6px 10px;">秋招提前批(7-8月) > 秋招正式批(9-11月) > 春招(2-4月)</td></tr>
+</table>
+</div>`,
+
+  resume: `<div class="diagnose-report">
+<h3 style="color:#4A148C;margin-bottom:14px;">📋 简历诊断报告 — AI智能分析结果</h3>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">📊 综合评分：<span style="font-size:24px;color:#6A1B9A;margin-left:8px;">72</span><span style="font-size:14px;color:#999;"> / 100</span></b>
+<div class="diagnose-score-bar"><div class="diagnose-score-fill" style="width:72%"></div></div>
+<div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+<span style="font-size:11px;padding:3px 10px;background:#E8F5E9;border-radius:12px;color:#2E7D32;">教育背景 ★★★★★</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFF3E0;border-radius:12px;color:#EF6C00;">技能广度 ★★★☆☆</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFEBEE;border-radius:12px;color:#C62828;">量化成果 ★★☆☆☆</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFF3E0;border-radius:12px;color:#EF6C00;">项目深度 ★★★☆☆</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#137333;font-size:15px;">✅ 你的优势亮点（保持！）</b>
+<div class="issue-item issue-good">
+<b>🎓 教育背景突出</b> — 香港城市大学硕士学位，985/211本硕背景在简历筛选阶段具有明显优势，建议放在最显眼位置
+</div>
+<div class="issue-item issue-good">
+<b>🤖 AI项目经验稀缺且加分</b> — "AI求职智能匹配系统开发"是非常亮眼的项目经历，体现了技术理解力+产品思维+执行力，是差异化竞争优势
+</div>
+<div class="issue-item issue-good">
+<b>📈 实习有量化意识雏形</b> — "阅读量突破5万+"、"覆盖2000+学生"已经体现数据思维，这是HR非常看重的点
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#c5221f;font-size:15px;">⚠️ 关键问题（必须修改！按紧急程度排序）</b>
+<div class="issue-item issue-error" style="border-left:4px solid #c5221f;">
+<b style="font-size:14px;">❶ 缺少量化成果（影响最大）</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">几乎所有经历的描述都缺少可衡量的数字。HR在每份简历上停留时间仅<strong>6-10秒</strong>，数字是最快抓住眼球的方式。</p>
+<span class="fix-hint">→ 改法示例："负责公众号运营" 改为 "独立负责公众号运营，<b>3个月产出20篇原创文章，累计阅读量<b style="color:#137333;">5W+</b>，粉丝增长<b style="color:#137333;">40%</b>"</b></span>
+</div>
+<div class="issue-item issue-error">
+<b style="font-size:14px;">❷ 项目描述缺乏结构化</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">AI项目经历只写了做了什么，没写清楚<strong>解决了什么问题、用了什么方法、达到了什么效果</strong>。面试官会追问细节。</p>
+<span class="fix-hint">→ 建议用 <b>STAR法则</b>重构：情境(S)→任务(T)→行动(A)→结果(R)，每个项目控制在3-4行</span>
+</div>
+<div class="issue-item issue-warn">
+<b style="font-size:14px;">❸ 简历未针对岗位定制</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">目前是"一份简历打天下"。不同岗位（产品vs运营vs数据）关注的关键词完全不同，需要准备<strong>2-3个版本</strong>。</p>
+<span class="fix-hint">→ 投产品岗时突出"用户研究"、"需求分析"；投运营岗时突出"数据驱动"、"增长实验"</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">💡 具体改写示例</b>
+<div class="rewrite-card">
+<b style="color:#666;">▎原句（平淡无奇）：</b><br>
+<span style="color:#999;">"协助运营官方公众号及小红书账号，参与新品上市的市场调研工作"</span>
+<br><br>
+<b style="color:#137333;">▎优化后（有冲击力）：</b><br>
+<span style="line-height:1.8;">独立负责双平台账号运营，<b>3个月内产出原创文章20篇</b>（含2篇10W+爆文），累计阅读量突破<b>5W+</b>，粉丝增长<b>40%</b>；<br>
+主导新品上市调研，收集并分析<b>500+条</b>用户反馈，输出竞品对比报告，为定价策略提供数据支撑。</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">🎯 总体改进路线图</b>
+<table class="job-table">
+<tr><th>优先级</th><th>改进动作</th><th>预计效果</th><th>耗时</th></tr>
+<tr><td style="color:#c5221f;font-weight:700;">P0 紧急</td><td>所有经历添加量化数字</td><td>评分 +10~15</td><td>1小时</td></tr>
+<tr><td style="color:#ef6c00;font-weight:700;">P1 重要</td><td>AI项目用STAR重写</td><td>评分 +5~8</td><td>30分钟</td></tr>
+<tr><td style="color:#ef6c00;font-weight:700;">P1 重要</td><td>准备2-3版定向简历</td><td>初筛通过率 +30%</td><td>1小时</td></tr>
+<tr><td style="color:#1565c0;font-weight:700;">P2 建议</td><td>补充GitHub/作品集链接</b></td><td>技术岗加分</td><td>30分钟</td></tr>
+</table>
+</div>
+
+<p style="color:#7B1FA2;font-size:13px;text-align:center;margin-top:14px;">📌 以上为AI基于数百份优秀简历样本训练得出的诊断结果。修改后的简历预计可将初筛通过率从 ~20% 提升至 ~50%+</p>
+</div>`,
+
+  market: `<div class="background-report">
+<h3 style="color:#4A148C;margin-bottom:14px;font-size:18px;">📊 同背景求职者去向分析报告</h3>
+<div class="report-summary">
+<b>📌 分析对象：</b>与你背景相似的应届毕业生群体（同学历/同专业/同届）
+<br><b>⏱️ 数据时效：</b>综合近期招聘市场数据 + 往届就业去向统计
+<br><b>🔒 可信度说明：</b>城市分布基于公开就业质量报告；薪资区间基于招聘平台大数据；岗位占比基于行业调研
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">🏙️ 主要去向城市 TOP 5</b>
+<div class="city-grid">
+<div class="city-card"><b>上海</b><div class="city-pct">28%</div><small>金融/互联网/咨询/外企</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 14K-20K</span></div>
+<div class="city-card"><b>北京</b><div class="city-pct">24%</div><small>互联网/国企/央企/科技</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 13K-19K</span></div>
+<div class="city-card"><b>深圳</b><div class="city-pct">18%</div><small>科技/金融/跨境贸易</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 14K-21K</span></div>
+<div class="city-card"><b>杭州</b><div class="city-pct">12%</div><small>电商/AI/新零售</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 12K-17K</span></div>
+<div class="city-card"><b>广州</b><div class="city-pct">8%</div><small>贸易/快消/制造总部</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 10K-15K</span></div>
+</div>
+<div style="margin-top:10px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;color:#7B1FA2;">
+💡 <b>城市选择建议：</b>上海+深圳组合占46%，是本专业就业密度最高的区域。如果追求高薪和发展空间，首选上海或深圳；如果考虑生活成本，杭州的性价比最优。
+</div>
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">💰 薪资分布区间（月薪，税前）</b>
+<div class="salary-ranges">
+<div class="salary-range"><span class="salary-label">一线城市（北上深）</span><span class="salary-value" style="font-weight:700;color:#137333;">10K - 18K</span><small style="color:#999;">（中位数约14K）</small></div>
+<div class="salary-range"><span class="salary-label">新一线城市（杭州成都南京）</span><span class="salary-value" style="font-weight:700;color:#137333;">8K - 15K</span><small style="color:#999;">（中位数约11K）</small></div>
+<div class="salary-range"><span class="salary-label">其他城市</span><span class="salary-value" style="font-weight:700;color:#ef6c00;">6K - 12K</span><small style="color:#999;">（中位数约8K）</small></div>
+</div>
+<div style="margin-top:10px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;color:#4A148C;">
+📊 <b>薪资谈判参考：</b>以你的背景，首份工作建议报价区间 <b style="color:#137333;">12K-16K</b>（一线城市）。低于12K说明岗位价值被低估，高于16K需要有突出的项目/实习背书。
+</div>
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">🏢 主要岗位方向分布</b>
+<table class="job-table">
+<tr><th>岗位类型</th><th>占比</th><th>典型公司</th><th>起薪范围</th></tr>
+<tr><td><b>产品/运营类</b></td><td><b style="color:#6A1B9A;">32%</b></td><td>字节、腾讯、阿里、美团、京东</td><td>12K-22K</td></tr>
+<tr><td><b>数据分析/商业分析</b></td><td><b style="color:#6A1B9A;">24%</b></td><td>网易、滴滴、B站、小红书</td><td>11K-19K</td></tr>
+<tr><td><b>市场营销/品牌管理</b></td><td><b style="color:#6A1B9A;">20%</b></td><td>欧莱雅、联合利华、宝洁、耐克</td><td>10K-16K</td></tr>
+<tr><td><b>咨询/管培生</b></td><td><b style="color:#6A1B9A;">15%</b></td><td>MBB四大、快消管培、银行管培</td><td>14K-25K</td></tr>
+<tr><td><b>其他</b>（考公/留学/创业）</td><td>9%</td><td>—</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="report-insight">
+<b style="font-size:15px;">💡 职引AI洞察（基于你的个人背景定制）</b>
+<br><br>
+<b style="color:#137333;">① 最具竞争力的方向：</b>你的「AI项目开发经验」在当前市场上非常稀缺，建议重点瞄准 <b>A产品经理（AI方向）</b> 或 <b>B AI运营专员</b> 岗位，这两个方向能最大化发挥你的独特优势。
+<br><br>
+<b style="color:#1565c0;">② 最佳城市组合：</b><b>上海（主战场）+ 深圳（备选）</b>。上海外企和互联网公司最多，适合你的专业背景；深圳AI创业生态活跃，适合有技术倾向的你。
+<br><br>
+<b style="color:#ef6c00;">③ 薪资预期锚定：</b>首份工作不要好高骛远也不要低估自己。<b>14K左右</b>是一个合理的起点——既不会因要价过高被过滤掉，也给自己留出了成长空间。
+<br><br>
+<b style="color:#c5221f;">④ 时间线提醒：</b>秋招黄金期在 <b>7-10月</b>，大厂提前批通常从6月底就开始。现在距离秋招还有约3-4个月的准备窗口，建议：<b>先优化简历 → 再刷1-2个项目经验 → 7月开始海投</b>。
+</div>
+</div>`
 };
 
 // 演示模式：模拟简历文本
