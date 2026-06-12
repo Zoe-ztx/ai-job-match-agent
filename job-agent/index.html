@@ -29,6 +29,7 @@
   .back-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
   .api-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
   .api-status.connected { background: rgba(255, 215, 0, 0.3); color: #FFD700; }
+  .api-status.demo-mode { background: rgba(156, 39, 176, 0.2); color: #9B59B6; border: 1px dashed #9B59B6; }
 
   /* Screen 1: Home */
   .home-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; position: relative; z-index: 1; }
@@ -698,11 +699,22 @@ function enterChat(func, userInfo) {
   document.getElementById('chat-input').focus();
 }
 
+// ===== Demo Mode Data（服务器离线时的演示数据）=====
+var DEMO_MODE = true; // 离线时启用演示模式
+var demoResponses = {
+  match: '<div class="job-card"><div class="job-card-header"><span class="job-title">🎯 产品经理（应届生方向）</span><span class="match-badge match-high">高匹配</span></div><div class="job-meta">💰 15K-25K · 📍 上海/深圳/北京</div><div class="tags"><span class="tag">产品思维</span><span class="tag">数据分析</span><span class="tag">用户研究</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">💡 AI产品运营专员</span><span class="match-badge match-high">高匹配</span></div><div class="job-meta">💰 12K-20K · 📍 杭州/上海/广州</div><div class="tags"><span class="tag">AI工具应用</span><span class="tag">内容运营</span><span class="tag">竞品分析</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">📊 数据分析师（入门级）</span><span class="match-badge match-mid">中匹配</span></div><div class="job-meta">💰 10K-18K · 📍 北京/成都/武汉</div><div class="tags"><span class="tag">Excel/PPT</span><span class="tag">Python基础</span><span class="tag">数据可视化</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><div class="job-card"><div class="job-card-header"><span class="job-title">✍️ 新媒体内容策划</span><span class="match-badge match-mid">中匹配</span></div><div class="job-meta">💰 8K-15K · 📍 全国多地</div><div class="tags"><span class="tag">文案写作</span><span class="tag">视频剪辑</span><span class="tag">创意策划</span></div><a class="apply-btn" href="#" onclick="return false;">查看详情</a></div><br><p style="color:#7B1FA2;font-size:13px;">🔍 <b>匹配说明：</b>以上岗位根据你的背景信息智能推荐。建议优先投递<b>「高匹配」</b>岗位，同时补充相关技能提升「中匹配」>岗位的竞争力。<br><br>💡 <b>下一步建议：</b>我可以帮你进一步分析某个具体岗位的JD要求，或优化你的简历来提高匹配度！</p>',
+  resume: '<div class="diagnose-report"><h3 style="color:#4A148C;margin-bottom:12px;">📋 简历诊断报告</h3><div class="diagnose-section"><b style="color:#6A1B9A;">综合评分</b><div class="diagnose-score-bar"><div class="diagnose-score-fill" style="width:72%"></div><span class="diagnose-score">72 / 100</span></div></div><div class="diagnose-section"><b style="color:#6A1B9A;">✅ 优势项</b><div class="issue-item issue-good"><b>教育背景清晰</b> — 学历和专业信息完整，符合目标岗位基本要求</div><div class="issue-item issue-good"><b>技能关键词丰富</b> — 涵盖技术、工具、语言等多维度能力描述</div></div><div class="diagnose-section"><b style="color:#c5221f;">⚠️ 待改进</b><div class="issue-item issue-error"><b>缺少量化成果</b> — 实习经历中未体现具体数据和可衡量结果<br><span class="fix-hint">→ 建议：用数字说话，如"提升XX%"、"处理XX条数据"</span></div><div class="issue-item issue-warn"><b>项目经验描述偏简</b> — 缺少项目背景、角色、方法论和产出物<br><span class="fix-hint">→ 建议采用STAR法则重构：情境→任务→行动→结果</span></div><div class="issue-item issue-warn"><b>缺少与目标岗位的关键词对齐</b> — 未针对投递方向定制化调整<br><span class="fix-hint">→ 建议提取目标JD中的核心关键词融入简历</span></div></div><div class="diagnose-section"><b style="color:#6A1B9A;">💡 改写示例</b><div class="rewrite-card"><b>原句：</b>"负责公众号内容运营"<br><br><b>优化后：</b>"独立负责公众号内容运营，<b style="color:#137333;">3个月内产出原创文章20篇，累计阅读量突破5W+，粉丝增长40%</b>"</div></div></div><br><p style="color:#7B1FA2;font-size:13px;">📌 以上为AI智能诊断结果。如需进一步优化某个模块，可以告诉我具体想改进的部分！</p>',
+  market: '<div class="background-report"><h3 style="color:#4A148C;margin-bottom:14px;">📊 同背景求职者去向分析报告</h3><div class="report-summary"><b>📌 分析对象：</b>与你背景相似的应届毕业生群体（同学历/同专业）<br><b>⏱️ 数据时效：</b>基于近期就业市场动态综合分析</div><div class="report-section"><b style="color:#6A1B9A;">🏙️ 主要去向城市 TOP 5</b><div class="city-grid"><div class="city-card"><b>上海</b><div class="city-pct">28%</div><small>金融/互联网/咨询</small></div><div class="city-card"><b>北京</b><div class="city-pct">24%</div><small>互联网/国企/科技</small></div><div class="city-card"><b>深圳</b><div class="city-pct">18%</div><small>科技/金融/跨境</small></div><div class="city-card"><b>杭州</b><div class="city-pct">12%</div><small>电商/AI/新零售</small></div><div class="city-card"><b>广州</b><div class="city-pct">8%</div><small>贸易/快消/制造</small></div></div></div><div class="report-section"><b style="color:#6A1B9A;">💰 薪资分布区间</b><div class="salary-ranges"><div class="salary-range"><span class="salary-label">一线城市（北上深）</span><span class="salary-value">10K-18K / 月</span></div><div class="salary-range"><span class="salary-label">新一线（杭州成都）</span><span class="salary-value">8K-15K / 月</span></div><div class="salary-range"><span class="salary-label">其他城市</span><span class="salary-value">6K-12K / 月</span></div></div></div><div class="report-section"><b style="color:#6A1B9A;">🏢 主要岗位方向</b><table class="job-table"><tr><th>岗位类型</th><th>占比</th><th>典型公司</th></tr><tr><td>产品/运营类</td><td>32%</td><td>字节、腾讯、阿里、美团</td></tr><tr><td>数据分析类</td><td>24%</td><td>京东、网易、滴滴、B站</td></tr><tr><td>市场营销类</td><td>20%</td><td>欧莱雅、联合利华、宝洁</td></tr><tr><td>咨询/管培</td><td>15%</td><td>MBB、四大、快消管培生</td></tr><tr><td>其他（考公/留学等）</td><td>9%</td><td>—</td></tr></table></div><div class="report-insight"><b>💡 职引洞察：</b><br>1. 你的背景在<b>互联网产品/运营</b>方向最具竞争优势，建议优先关注此类岗位<br>2. <b>上海+深圳</b>是本专业就业密度最高的城市组合<br>3. 起薪期望建议定在 <b>12K-16K</b> 区间，既具竞争力又不过高<br>4. 秋招黄金期在 <b>8-10月</b>，建议提前准备项目经验和实习</div></div><br><p style="color:#7B1FA2;font-size:13px;">📌 ⚠️ 以上数据为AI综合分析生成的参考信息，实际薪资和就业情况因个人能力和市场变化而异。建议结合官方招聘渠道获取最新信息。</p>'
+};
+
 // 自动匹配岗位
 async function autoMatchJobs(userInfo) {
   if (!apiConnected) {
-    removeTyping();
-    addMessage('ai', '当前未连接LLM服务，请配置API Key后再试。');
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.match);
+    }, 2000);
     return;
   }
 
@@ -730,8 +742,11 @@ async function autoMatchJobs(userInfo) {
 // 自动诊断简历
 async function autoDiagnoseResume(userInfo) {
   if (!apiConnected) {
-    removeTyping();
-    addMessage('ai', '当前未连接LLM服务，请配置API Key后再试。');
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.resume);
+    }, 2500);
     return;
   }
 
@@ -759,8 +774,11 @@ async function autoDiagnoseResume(userInfo) {
 // 自动同背景去向分析
 async function autoBackgroundAnalysis(userInfo) {
   if (!apiConnected) {
-    removeTyping();
-    addMessage('ai', '当前未连接LLM服务，请配置API Key后再试。');
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.market);
+    }, 3000);
     return;
   }
 
@@ -927,7 +945,18 @@ function fillInput(text) {
 
 // ===== Local Fallback =====
 function getLocalReply(text) {
-  return '我是职引助手。当前未连接LLM服务，请在服务器端配置API Key后重试。<br><br>你可以运行：<br><code>export LLM_PROVIDER=hunyuan</code><br><code>export HUNYUAN_API_KEY=你的密钥</code><br><code>node server.js</code>';
+  // 演示模式：根据关键词返回智能模拟回复
+  var lower = text.toLowerCase();
+  if (lower.includes('匹配') || lower.includes('岗位') || lower.includes('推荐')) {
+    return '🎯 在演示模式下，你可以点击首页的「岗位智能匹配」卡片，上传或输入你的背景信息后，系统会自动为你展示匹配的岗位卡片（含高/中/低匹配度标签）！<br><br>💡 提示：当前为演示模式，连接真实服务器后可使用AI实时匹配。';
+  }
+  if (lower.includes('简历') || lower.includes('诊断') || lower.includes('优化')) {
+    return '✏️ 在演示模式下，点击「简历优化诊断」功能卡片，上传你的简历后，AI会给出：<br>• 综合评分（满分100）<br>• 优势项分析<br>• 问题定位+改进建议<br>• 简历改写示例<br><br>💡 当前展示的是模拟数据，连接后端服务可获得个性化诊断。';
+  }
+  if (lower.includes('去向') || lower.includes('城市') || lower.includes('薪资') || lower.includes('同背景')) {
+    return '📊 在演示模式下，点击「同背景去向」功能卡片可查看：<br>• 主要去向城市 TOP5 + 占比<br>• 不同城市的薪资分布区间<br>• 岗位方向占比表<br>• AI洞察建议<br><br>⚠️ 数据为综合分析参考值，实际以官方招聘信息为准。';
+  }
+  return '你好！我是<b>职引</b>的演示助手 🎬<br><br>当前运行在<strong>演示模式</strong>下（服务器离线）。你可以体验以下功能：<br><b>1.</b> 点击「🎯 岗位智能匹配」— 查看模拟的岗位推荐<br><b>2.</b> 点击「✏️ 简历优化诊断」— 查看模拟的诊断报告<br><b>3.</b> 点击「📊 同背景去向」— 查看模拟的去向分析报告<br><br>💡 连接后端服务后，以上功能将使用AI实时生成结果。';
 }
 
 // ===== API Status Check =====
@@ -947,8 +976,8 @@ async function checkApiStatus() {
     }
   } catch (e) {
     apiConnected = false;
-    statusEl.textContent = '服务器离线';
-    statusEl.className = 'api-status disconnected';
+    statusEl.textContent = '🎬 演示模式';
+    statusEl.className = 'api-status demo-mode';
   }
 }
 
