@@ -29,7 +29,7 @@
   .back-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
   .api-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
   .api-status.connected { background: rgba(255, 215, 0, 0.3); color: #FFD700; }
-  .api-status.demo-mode { background: rgba(156, 39, 176, 0.2); color: #9B59B6; border: 1px dashed #9B59B6; }
+  .api-status.demo-mode { background: rgba(106, 27, 154, 0.85); color: #FFFFFF; border: 1px dashed #E8D5FF; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
 
   /* Screen 1: Home */
   .home-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; position: relative; z-index: 1; }
@@ -94,6 +94,11 @@
   .chat-screen { flex: 1; display: none; flex-direction: column; }
   .chat-screen.active { display: flex; }
   .func-banner { background: linear-gradient(135deg, #E8D5FF, #F5F0FF); padding: 10px 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4A148C; font-weight: 600; border-bottom: 1px solid #E8D5FF; }
+  .demo-notice { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); padding: 10px 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #E65100; border-bottom: 1px solid #FFCC80; }
+  .demo-notice-icon { font-size: 16px; }
+  .demo-notice-text { flex: 1; }
+  .demo-highlight { font-weight: 700; color: #BF360C; }
+  .demo-video-link { color: #1565C0; text-decoration: underline; font-weight: 600; }
   .chat-container { flex: 1; overflow-y: auto; padding: 16px; background: linear-gradient(180deg, #FAFAFF 0%, #F5F0FF 100%); }
   .msg { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; animation: msgSlide 0.3s ease-out; }
   @keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -287,6 +292,11 @@
     <h2>你好，我是职引</h2>
     <p>你的AI求职智能匹配助手，请选择你需要的服务</p>
   </div>
+  <!-- 首页演示模式提示 -->
+  <div class="demo-notice" id="demo-notice-home" style="display: none; margin: 0 20px 16px; border-radius: 12px;">
+    <span class="demo-notice-icon">📹</span>
+    <span class="demo-notice-text">当前为<span class="demo-highlight">演示模式</span>（服务器离线，展示模拟数据）。请观看<span class="demo-highlight">演示视频</span>（见提交材料）了解真实AI效果（LLM集成、实时分析）。</span>
+  </div>
   <div class="func-grid">
     <div class="func-card" onclick="selectFunc('match')">
       <div class="func-icon">&#127919;</div>
@@ -382,6 +392,11 @@
   <div class="func-banner" id="func-banner">
     <span id="func-banner-icon">&#127919;</span>
     <span id="func-banner-text">岗位智能匹配</span>
+  </div>
+  <!-- 演示模式提示横幅 -->
+  <div class="demo-notice" id="demo-notice" style="display: none;">
+    <span class="demo-notice-icon">📹</span>
+    <span class="demo-notice-text">当前为<span class="demo-highlight">演示模式</span>（模拟数据）。请观看<span class="demo-highlight">演示视频</span>（见提交材料）了解真实AI效果（LLM集成、实时分析）。</span>
   </div>
   <div class="chat-container" id="chat-messages"></div>
   <div class="input-area">
@@ -1216,9 +1231,14 @@ function getLocalReply(text) {
 // ===== API Status Check =====
 async function checkApiStatus() {
   var statusEl = document.getElementById('api-status');
+  var demoNotice = document.getElementById('demo-notice');
+  var demoNoticeHome = document.getElementById('demo-notice-home');
   try {
     var res = await fetch('/api/health');
     var data = await res.json();
+    // 服务器在线：隐藏演示模式提示
+    demoNotice.style.display = 'none';
+    demoNoticeHome.style.display = 'none';
     if (data.apiKeyConfigured) {
       apiConnected = true;
       statusEl.textContent = 'LLM已连接';
@@ -1229,9 +1249,12 @@ async function checkApiStatus() {
       statusEl.className = 'api-status disconnected';
     }
   } catch (e) {
+    // 服务器离线：演示模式，显示提示
     apiConnected = false;
     statusEl.textContent = '🎬 演示模式';
     statusEl.className = 'api-status demo-mode';
+    demoNotice.style.display = 'flex';
+    demoNoticeHome.style.display = 'flex';
   }
 }
 
