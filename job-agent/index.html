@@ -632,8 +632,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，直接进入匹配流程
       showScreen('chat');
-      addMessage('ai', '正在为你匹配可投递的岗位，预计需要20秒，请稍候...');
-      showTyping(20);
+      addMessage('ai', '正在为你匹配可投递的岗位，预计需要60秒，请稍候...');
+      showTyping(60);
 
       // 设置上下文（供后续对话使用）
       if (apiConnected) {
@@ -653,8 +653,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，自动开始诊断
       showScreen('chat');
-      addMessage('ai', '正在为你诊断简历，预计需要30秒，请稍候...');
-      showTyping(30);
+      addMessage('ai', '正在为你诊断简历，预计需要60秒，请稍候...');
+      showTyping(60);
 
       // 设置上下文
       if (apiConnected) {
@@ -674,8 +674,8 @@ function enterChat(func, userInfo) {
     if (userInfo) {
       // 已确认信息，自动开始同背景去向分析
       showScreen('chat');
-      addMessage('ai', '正在为你分析同背景求职者的去向情况，预计需要40秒，请稍候...');
-      showTyping(40);
+      addMessage('ai', '正在为你分析同背景求职者的去向情况，预计需要60秒，请稍候...');
+      showTyping(60);
 
       // 设置上下文
       if (apiConnected) {
