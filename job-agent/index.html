@@ -171,6 +171,43 @@
   .market-insight { background: #fff8e1; border: 1px solid #fde293; border-radius: 10px; padding: 16px; margin-top: 16px; }
   .insight-title { font-size: 14px; font-weight: 700; color: #e37400; margin-bottom: 8px; }
   .insight-content { font-size: 13px; color: #5f6368; line-height: 1.6; }
+  
+  /* Background Report */
+  .background-report { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .report-header { margin-bottom: 16px; }
+  .report-title { font-size: 18px; font-weight: 700; color: #202124; margin-bottom: 4px; }
+  .report-date { font-size: 12px; color: #80868b; }
+  .report-summary { font-size: 14px; color: #5f6368; line-height: 1.6; padding: 12px 16px; background: linear-gradient(135deg, #e8f0fe, #fce8e6); border-radius: 8px; margin-bottom: 20px; }
+  
+  .report-section { margin-bottom: 20px; }
+  .report-section .section-title { font-size: 15px; font-weight: 700; color: #202124; margin-bottom: 12px; }
+  
+  .city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .city-card { background: #f8f9fa; border-radius: 10px; padding: 16px; border: 1px solid #e8edf5; }
+  .city-name { font-size: 16px; font-weight: 700; color: #202124; margin-bottom: 6px; }
+  .city-count { font-size: 13px; color: #5f6368; margin-bottom: 4px; }
+  .city-salary { font-size: 13px; color: #1a73e8; font-weight: 600; margin-bottom: 8px; }
+  .city-source { font-size: 11px; color: #80868b; }
+  .city-source a { color: #1a73e8; text-decoration: none; }
+  
+  .salary-ranges { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .salary-range { background: #f8f9fa; border-radius: 8px; padding: 12px 16px; border: 1px solid #e8edf5; display: flex; justify-content: space-between; align-items: center; }
+  .range-label { font-size: 15px; font-weight: 700; color: #202124; }
+  .range-count { font-size: 13px; color: #5f6368; }
+  .range-source { font-size: 11px; color: #80868b; }
+  .range-source a { color: #1a73e8; text-decoration: none; }
+  
+  .job-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .job-table th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 600; color: #202124; border-bottom: 2px solid #e8edf5; }
+  .job-table td { padding: 10px 12px; border-bottom: 1px solid #e8edf5; color: #3c4043; }
+  .job-table tr:hover { background: #f8f9fa; }
+  .job-table a { color: #1a73e8; text-decoration: none; }
+  .job-table a:hover { text-decoration: underline; }
+  
+  .report-insight { background: #fff8e1; border: 1px solid #fde293; border-radius: 10px; padding: 16px; margin-top: 16px; }
+  .insight-title { font-size: 14px; font-weight: 700; color: #e37400; margin-bottom: 8px; }
+  .insight-content { font-size: 13px; color: #5f6368; line-height: 1.6; }
+  
 
   /* Typing */
   .typing { display: flex; gap: 4px; padding: 4px 0; }
@@ -218,13 +255,8 @@
     </div>
     <div class="func-card" onclick="selectFunc('market')">
       <div class="func-icon">&#128202;</div>
-      <div class="func-title">市场竞争分析</div>
-      <div class="func-desc">了解同背景求职者的市场定位、去向和竞争格局</div>
-    </div>
-    <div class="func-card" onclick="selectFunc('plan')">
-      <div class="func-icon">&#128197;</div>
-      <div class="func-title">求职计划制定</div>
-      <div class="func-desc">根据你的情况制定个性化求职时间表和投递策略</div>
+      <div class="func-title">同背景去向</div>
+      <div class="func-desc">了解同背景求职者的就业去向、城市分布和薪资水平</div>
     </div>
   </div>
 </div>
@@ -544,8 +576,7 @@ function enterChat(func, userInfo) {
   var banners = {
     match: { icon: '&#127919;', text: '岗位智能匹配' },
     resume: { icon: '&#128221;', text: '简历优化诊断' },
-    market: { icon: '&#128202;', text: '市场竞争分析' },
-    plan: { icon: '&#128197;', text: '求职计划制定' }
+    market: { icon: '&#128202;', text: '同背景去向分析' }
   };
   var b = banners[func] || banners.match;
   document.getElementById('func-banner-icon').innerHTML = b.icon;
@@ -597,9 +628,9 @@ function enterChat(func, userInfo) {
     }
   } else if (func === 'market') {
     if (userInfo) {
-      // 已确认信息，自动开始市场分析
+      // 已确认信息，自动开始同背景去向分析
       showScreen('chat');
-      addMessage('ai', '正在为你分析市场竞争情况，请稍候...');
+      addMessage('ai', '正在为你分析同背景求职者的去向情况，请稍候...');
       showTyping();
 
       // 设置上下文
@@ -611,13 +642,11 @@ function enterChat(func, userInfo) {
         }).catch(function(e) { console.error('set-context error:', e); });
       }
 
-      autoMarketAnalysis(userInfo);
+      autoBackgroundAnalysis(userInfo);
       return;
     } else {
-      welcome = '你好！我是你的<strong>市场分析助手</strong>。请告诉我你的背景信息，我来帮你分析同背景求职者在市场中的定位和竞争格局。<br><br>例如：<br>• "211计算机本科 在市场上竞争力如何"<br>• "同背景的同学都去了哪些公司"';
+      welcome = '你好！我是你的<strong>同背景去向分析助手</strong>。请告诉我你的背景信息，我来帮你分析同背景求职者的就业去向、城市分布和薪资水平。<br><br>例如：<br>• "同背景的同学都去了哪些城市"<br>• "同背景的求职者薪资一般多少"';
     }
-  } else if (func === 'plan') {
-    welcome = '你好！我是你的<strong>求职规划助手</strong>。请告诉我你的情况，我来帮你制定个性化的求职时间表和投递策略。';
   }
 
   addMessage('ai', welcome);
@@ -683,8 +712,8 @@ async function autoDiagnoseResume(userInfo) {
   }
 }
 
-// 自动市场分析
-async function autoMarketAnalysis(userInfo) {
+// 自动同背景去向分析
+async function autoBackgroundAnalysis(userInfo) {
   if (!apiConnected) {
     removeTyping();
     addMessage('ai', '当前未连接LLM服务，请配置API Key后再试。');
@@ -705,8 +734,8 @@ async function autoMarketAnalysis(userInfo) {
     addMessage('ai', data.reply);
   } catch (e) {
     removeTyping();
-    addMessage('ai', '抱歉，市场分析请求出错了：' + e.message);
-    console.error('Auto market analysis error:', e);
+    addMessage('ai', '抱歉，同背景去向分析请求出错了：' + e.message);
+    console.error('Auto background analysis error:', e);
   } finally {
     setSending(false);
   }
@@ -832,30 +861,10 @@ async function checkApiStatus() {
   }
 }
 
-// ===== 测试模式：跳过上传/解析，直接进对话 =====
-var TEST_USER_INFO = {
-  edu: '香港城市大学 市场营销 硕士',
-  skills: 'Python / PS / 剪映 / 市场营销 / 数据分析',
-  projects: '校园招聘数据分析项目',
-  intern: '无',
-  salary: '15k-22k',
-  city: '深圳',
-  direction: '市场营销'
-};
-
 // ===== Init =====
 window.addEventListener('load', async function() {
   await checkApiStatus();
-
-  // 检查是否是测试模式：URL加 ?test=1&func=xxx 直接跳到对话（func可选：match/resume/market/plan）
-  var params = new URLSearchParams(window.location.search);
-  if (params.get('test') === '1') {
-    // 直接进入聊天，跳过上传和确认
-    var testFunc = params.get('func') || 'match';
-    enterChat(testFunc, TEST_USER_INFO);
-  } else {
-    showScreen('home');
-  }
+  showScreen('home');
 });
 </script>
 
