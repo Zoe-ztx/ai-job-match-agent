@@ -14,7 +14,7 @@ const app = express();
 const PORT = 3000;
 
 // ===== SerpAPI 配置 =====
-const SERPAPI_KEY = process.env.SERPAPI_KEY || 'fe88e88a932da7dda253e012bc125cb4816bcb771276aad1b22045915e8ab600';
+const SERPAPI_KEY = process.env.SERPAPI_KEY || '';
 
 // ===== 配置 =====
 // 支持三种LLM提供商：zhipu（智谱AI）、hunyuan（腾讯混元）、openai-compatible（通用）

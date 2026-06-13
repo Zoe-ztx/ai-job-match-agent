@@ -1,0 +1,6 @@
+node_modules/
+.env
+.DS_Store
+*.log
+generate_pdf.js
+视频录制脚本*.md
