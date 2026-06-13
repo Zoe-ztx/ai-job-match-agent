@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>职引 · AI求职智能匹配智能体</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; background: linear-gradient(135deg, #f5f0ff 0%, #fff8e1 50%, #ffffff 100%); height: 100vh; display: flex; flex-direction: column; position: relative; overflow-x: hidden; }
+  
+  /* 可爱背景装饰 */
+  body::before { content: '✨'; position: fixed; top: 10%; left: 5%; font-size: 24px; opacity: 0.3; animation: float 6s ease-in-out infinite; pointer-events: none; z-index: 0; }
+  body::after { content: '💼'; position: fixed; bottom: 15%; right: 8%; font-size: 28px; opacity: 0.2; animation: float 8s ease-in-out infinite reverse; pointer-events: none; z-index: 0; }
+  
+  @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
+  
+  /* 装饰圆点 */
+  .deco-dot { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0.15; }
+  .deco-dot:nth-child(1) { width: 80px; height: 80px; background: #9B59B6; top: 5%; right: 10%; animation: float 7s ease-in-out infinite; }
+  .deco-dot:nth-child(2) { width: 60px; height: 60px; background: #FFD700; bottom: 20%; left: 5%; animation: float 9s ease-in-out infinite reverse; }
+  .deco-dot:nth-child(3) { width: 40px; height: 40px; background: #E8D5FF; top: 50%; left: 15%; animation: float 5s ease-in-out infinite; }
+
+  /* Header - 紫色渐变 */
+  .header { background: linear-gradient(135deg, #6A1B9A 0%, #9B59B6 100%); color: white; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(106, 27, 154, 0.3); position: relative; z-index: 10; }
+  .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .header h1::before { content: '✨'; font-size: 20px; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .back-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 14px; font-size: 12px; cursor: pointer; display: none; transition: all 0.2s; }
+  .back-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
+  .api-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
+  .api-status.connected { background: rgba(255, 215, 0, 0.3); color: #FFD700; }
+  .api-status.demo-mode { background: rgba(106, 27, 154, 0.85); color: #FFFFFF; border: 1px dashed #E8D5FF; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+
+  /* Screen 1: Home */
+  .home-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; position: relative; z-index: 1; }
+  .home-greeting { text-align: center; margin-bottom: 32px; animation: fadeInUp 0.6s ease-out; }
+  .home-greeting h2 { font-size: 28px; color: #4A148C; margin-bottom: 8px; font-weight: 700; }
+  .home-greeting p { font-size: 14px; color: #7B1FA2; }
+  .func-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 900px; width: 100%; }
+  .func-card { background: white; border-radius: 16px; padding: 24px 20px; box-shadow: 0 4px 12px rgba(106, 27, 154, 0.1); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid transparent; position: relative; overflow: hidden; }
+  .func-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #6A1B9A, #FFD700); opacity: 0; transition: opacity 0.3s; }
+  .func-card:hover { border-color: #9B59B6; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(106, 27, 154, 0.2); }
+  .func-card:hover::before { opacity: 1; }
+  .func-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin-bottom: 12px; transition: transform 0.3s; }
+  .func-card:hover .func-icon { transform: scale(1.1) rotate(-5deg); }
+  .func-card:nth-child(1) .func-icon { background: linear-gradient(135deg, #E8D5FF, #D1C4E9); }
+  .func-card:nth-child(2) .func-icon { background: linear-gradient(135deg, #FFF9C4, #FFD700); }
+  .func-card:nth-child(3) .func-icon { background: linear-gradient(135deg, #E1BEE7, #CE93D8); }
+  .func-title { font-size: 16px; font-weight: 600; color: #4A148C; margin-bottom: 6px; }
+  .func-desc { font-size: 12px; color: #7B1FA2; line-height: 1.5; }
+
+  /* Screen 2: Resume Upload */
+  .resume-screen { flex: 1; display: none; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; position: relative; z-index: 1; }
+  .resume-step { max-width: 520px; width: 100%; }
+  .step-indicator { display: flex; gap: 8px; margin-bottom: 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: #E8D5FF; transition: background 0.3s; }
+  .step-dot.active { background: #9B59B6; }
+  .step-dot.done { background: #FFD700; }
+  .resume-title { font-size: 20px; font-weight: 600; color: #4A148C; margin-bottom: 8px; }
+  .resume-subtitle { font-size: 13px; color: #7B1FA2; margin-bottom: 24px; line-height: 1.5; }
+  .upload-zone { border: 2px dashed #D1C4E9; border-radius: 16px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: white; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .upload-zone::before { content: '📄'; position: absolute; top: 10px; right: 15px; font-size: 40px; opacity: 0.1; }
+  .upload-zone:hover { border-color: #9B59B6; background: #F5F0FF; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(106, 27, 154, 0.15); }
+  .upload-zone.dragover { border-color: #6A1B9A; background: #E8D5FF; }
+  .upload-icon { font-size: 40px; margin-bottom: 12px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .upload-text { font-size: 14px; color: #7B1FA2; margin-bottom: 8px; }
+  .upload-hint { font-size: 12px; color: #B39DDB; }
+  .upload-success { background: #FFF9C4; border: 1px solid #FFD700; border-radius: 10px; padding: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease-out; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  .upload-success .check { color: #FFD700; font-size: 20px; }
+  .or-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #B39DDB; font-size: 12px; }
+  .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: #D1C4E9; }
+  .paste-area { width: 100%; min-height: 140px; border: 2px solid #E8D5FF; border-radius: 12px; padding: 12px; font-size: 13px; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; }
+  .paste-area:focus { border-color: #9B59B6; background: #FAFAFF; }
+  .action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+  .action-btn.primary { background: linear-gradient(135deg, #6A1B9A, #9B59B6); color: white; box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3); }
+  .action-btn.primary:hover { background: linear-gradient(135deg, #4A148C, #6A1B9A); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(106, 27, 154, 0.4); }
+  .action-btn.primary:disabled { background: #E8D5FF; cursor: not-allowed; transform: none; box-shadow: none; }
+  .action-btn.secondary { background: white; color: #6A1B9A; border: 2px solid #D1C4E9; }
+  .action-btn.secondary:hover { background: #F5F0FF; border-color: #9B59B6; }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* Confirm Info */
+  .info-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(106, 27, 154, 0.1); margin-bottom: 16px; border: 1px solid #E8D5FF; }
+  .info-section { margin-bottom: 16px; }
+  .info-section:last-child { margin-bottom: 0; }
+  .info-label { font-size: 12px; color: #9B59B6; margin-bottom: 4px; font-weight: 600; }
+  .info-value { font-size: 14px; color: #4A148C; padding: 8px 12px; background: #F5F0FF; border-radius: 10px; border: 1px solid #E8D5FF; min-height: 36px; line-height: 1.5; transition: all 0.2s; }
+  .info-value[contenteditable]:focus { outline: none; border-color: #9B59B6; background: white; box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1); }
+  .edit-hint { font-size: 11px; color: #9B59B6; margin-top: 12px; }
+
+  /* Screen 3: Chat */
+  .chat-screen { flex: 1; display: none; flex-direction: column; }
+  .chat-screen.active { display: flex; }
+  .func-banner { background: linear-gradient(135deg, #E8D5FF, #F5F0FF); padding: 10px 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4A148C; font-weight: 600; border-bottom: 1px solid #E8D5FF; }
+  .demo-notice { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); padding: 10px 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #E65100; border-bottom: 1px solid #FFCC80; }
+  .demo-notice-icon { font-size: 16px; }
+  .demo-notice-text { flex: 1; }
+  .demo-highlight { font-weight: 700; color: #BF360C; }
+  .demo-video-link { color: #1565C0; text-decoration: underline; font-weight: 600; }
+  .chat-container { flex: 1; overflow-y: auto; padding: 16px; background: linear-gradient(180deg, #FAFAFF 0%, #F5F0FF 100%); }
+  .msg { display: flex; gap: 10px; margin-bottom: 16px; align-items: flex-start; animation: msgSlide 0.3s ease-out; }
+  @keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .msg.user { flex-direction: row-reverse; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .avatar.ai { background: linear-gradient(135deg, #6A1B9A, #9B59B6); color: white; }
+  .avatar.user { background: linear-gradient(135deg, #FFD700, #FFA000); color: #4A148C; }
+  .bubble { max-width: 80%; background: white; border-radius: 16px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #E8D5FF; }
+  .msg.user .bubble { background: linear-gradient(135deg, #6A1B9A, #9B59B6); color: white; border: none; }
+  .bubble-inner { font-size: 14px; line-height: 1.6; }
+  .bubble-inner strong { color: #9B59B6; }
+  .msg.user .bubble-inner strong { color: #FFD700; }
+  .bubble-time { font-size: 11px; color: #B39DDB; margin-top: 6px; }
+  .msg.user .bubble-time { color: rgba(255,255,255,0.7); text-align: right; }
+  .input-area { background: white; border-top: 2px solid #E8D5FF; padding: 12px 16px; display: flex; gap: 8px; align-items: flex-end; }
+  .input-area textarea { flex: 1; border: 2px solid #E8D5FF; border-radius: 20px; padding: 10px 16px; font-size: 14px; resize: none; outline: none; min-height: 40px; max-height: 100px; font-family: inherit; transition: border-color 0.2s; }
+  .input-area textarea:focus { border-color: #9B59B6; }
+  .input-area textarea:disabled { background: #F5F5F5; color: #999; }
+  .send-btn { background: linear-gradient(135deg, #6A1B9A, #9B59B6); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s; box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3); }
+  .send-btn:hover { background: linear-gradient(135deg, #4A148C, #6A1B9A); transform: scale(1.1); }
+  .send-btn:disabled { background: #E8D5FF; cursor: not-allowed; transform: none; box-shadow: none; }
+  .send-btn svg { width: 20px; height: 20px; }
+
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  /* Job Card */
+  .job-card { background: #F5F0FF; border: 1px solid #E8D5FF; border-radius: 12px; padding: 14px; margin: 10px 0; transition: all 0.2s; }
+  .job-card:hover { box-shadow: 0 4px 12px rgba(106, 27, 154, 0.15); transform: translateY(-2px); }
+  .job-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .job-title { font-size: 15px; font-weight: 600; color: #4A148C; margin-bottom: 4px; }
+  .match-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+  .match-high { background: #E8F5E9; color: #2E7D32; }
+  .match-mid { background: #FFF9C4; color: #F57F17; }
+  .match-low { background: #FFCCBC; color: #D84315; }
+  .job-meta { font-size: 12px; color: #7B1FA2; margin: 4px 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .job-source { display: flex; align-items: center; gap: 4px; color: #9B59B6; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .tag { padding: 3px 10px; background: white; border: 1px solid #E8D5FF; border-radius: 12px; font-size: 11px; color: #7B1FA2; }
+  .tag.match { background: #F5F0FF; border-color: #9B59B6; color: #6A1B9A; }
+  .tag.unmatch { background: #FFCCBC; border-color: #FF8A65; color: #D84315; }
+  .section-title { font-size: 13px; font-weight: 600; color: #4A148C; margin: 10px 0 6px; }
+  .match-item, .unmatch-item, .gap-item { font-size: 12px; color: #7B1FA2; margin: 4px 0; padding-left: 16px; position: relative; }
+  .match-item:before { content: "✓"; position: absolute; left: 0; color: #2E7D32; font-weight: 700; }
+  .unmatch-item:before { content: "✗"; position: absolute; left: 0; color: #D84315; font-weight: 700; }
+  .gap-item:before { content: "→"; position: absolute; left: 0; color: #F9A825; font-weight: 700; }
+  .stats-card { background: white; border: 1px solid #E8D5FF; border-radius: 10px; padding: 12px; margin: 8px 0; }
+  .stats-source { font-size: 11px; color: #B39DDB; margin-top: 8px; padding-top: 8px; border-top: 1px solid #F5F0FF; }
+  .apply-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #E8D5FF; text-align: right; }
+  .apply-btn { display: inline-block; background: linear-gradient(135deg, #6A1B9A, #9B59B6); color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3); }
+  .apply-btn:hover { background: linear-gradient(135deg, #4A148C, #6A1B9A); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(106, 27, 154, 0.4); }
+
+  /* Diagnose Report */
+  .diagnose-report { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(106, 27, 154, 0.1); border: 1px solid #E8D5FF; }
+  .diagnose-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .diagnose-title { font-size: 18px; font-weight: 700; color: #4A148C; margin-bottom: 4px; }
+  .diagnose-score-wrap { display: flex; align-items: baseline; gap: 2px; }
+  .diagnose-score { font-size: 36px; font-weight: 800; color: #6A1B9A; line-height: 1; }
+  .diagnose-score-unit { font-size: 16px; color: #B39DDB; font-weight: 500; }
+  .diagnose-score-bar { height: 8px; background: #E8D5FF; border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+  .diagnose-score-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #9B59B6, #6A1B9A); transition: width 0.6s ease; }
+  .diagnose-section { margin-bottom: 18px; }
+  .diagnose-summary { font-size: 14px; color: #4A148C; line-height: 1.6; padding: 10px 14px; background: #F5F0FF; border-radius: 8px; border-left: 3px solid #9B59B6; }
+
+  .issue-card { display: flex; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .issue-error { background: #FFCCBC; border: 1px solid #FFAB91; }
+  .issue-warn { background: #FFF9C4; border: 1px solid #FFD54F; }
+  .issue-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .issue-title { font-size: 14px; font-weight: 600; color: #4A148C; margin-bottom: 4px; }
+  .issue-desc { font-size: 13px; color: #7B1FA2; line-height: 1.5; }
+
+  .suggest-card { display: flex; gap: 12px; padding: 12px; background: #FFF9C4; border: 1px solid #FFD54F; border-radius: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .suggest-num { width: 26px; height: 26px; border-radius: 50%; background: #FFD700; color: #4A148C; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .suggest-title { font-size: 14px; font-weight: 600; color: #4A148C; margin-bottom: 4px; }
+  .suggest-desc { font-size: 13px; color: #7B1FA2; line-height: 1.5; }
+
+  .rewrite-card { background: #F5F0FF; border-radius: 10px; padding: 16px; border: 1px solid #E8D5FF; }
+  .rewrite-label { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+  .rewrite-before { background: #FFCCBC; color: #D84315; }
+  .rewrite-after { background: #E8F5E9; color: #2E7D32; margin-top: 12px; }
+  .rewrite-text { font-size: 13px; color: #3c4043; line-height: 1.6; padding: 8px 12px; background: white; border-radius: 6px; border: 1px solid #E8D5FF; }
+
+  /* Market Report */
+  .market-report { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(106, 27, 154, 0.1); border: 1px solid #E8D5FF; }
+  .market-header { margin-bottom: 16px; }
+  .market-title { font-size: 18px; font-weight: 700; color: #4A148C; margin-bottom: 4px; }
+  .market-date { font-size: 12px; color: #B39DDB; }
+  .market-summary { font-size: 14px; color: #4A148C; line-height: 1.6; padding: 12px 16px; background: linear-gradient(135deg, #F5F0FF, #FFF9C4); border-radius: 8px; margin-bottom: 20px; }
+  
+  .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .market-card { background: #F5F0FF; border-radius: 10px; padding: 16px; text-align: center; border: 1px solid #E8D5FF; transition: all 0.2s; }
+  .market-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(106, 27, 154, 0.15); }
+  .card-icon { font-size: 28px; margin-bottom: 8px; }
+  .card-title { font-size: 12px; color: #B39DDB; margin-bottom: 6px; font-weight: 500; }
+  .card-value { font-size: 24px; font-weight: 800; color: #4A148C; margin-bottom: 4px; }
+  .card-desc { font-size: 11px; color: #7B1FA2; line-height: 1.4; }
+  
+  .market-section { margin-bottom: 20px; }
+  .section-content { font-size: 13px; color: #4A148C; line-height: 1.6; }
+  .market-insight { background: #FFF9C4; border: 1px solid #FFD54F; border-radius: 10px; padding: 16px; margin-top: 16px; }
+  .insight-title { font-size: 14px; font-weight: 700; color: #F57F17; margin-bottom: 8px; }
+  .insight-content { font-size: 13px; color: #4A148C; line-height: 1.6; }
+  
+  /* Background Report */
+  .background-report { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px rgba(106, 27, 154, 0.1); border: 1px solid #E8D5FF; }
+  .report-header { margin-bottom: 16px; }
+  .report-title { font-size: 18px; font-weight: 700; color: #4A148C; margin-bottom: 4px; }
+  .report-date { font-size: 12px; color: #B39DDB; }
+  .report-summary { font-size: 14px; color: #4A148C; line-height: 1.6; padding: 12px 16px; background: linear-gradient(135deg, #F5F0FF, #FFF9C4); border-radius: 8px; margin-bottom: 20px; }
+  
+  .report-section { margin-bottom: 20px; }
+  .report-section .section-title { font-size: 15px; font-weight: 700; color: #4A148C; margin-bottom: 12px; }
+  
+  .city-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .city-card { background: #F5F0FF; border-radius: 10px; padding: 16px; border: 1px solid #E8D5FF; transition: all 0.2s; }
+  .city-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(106, 27, 154, 0.15); }
+  .city-name { font-size: 16px; font-weight: 700; color: #4A148C; margin-bottom: 6px; }
+  .city-count { font-size: 13px; color: #7B1FA2; margin-bottom: 4px; }
+  .city-salary { font-size: 13px; color: #6A1B9A; font-weight: 600; margin-bottom: 8px; }
+  .city-source { font-size: 11px; color: #B39DDB; }
+  .city-source a { color: #9B59B6; text-decoration: none; }
+  
+  .salary-ranges { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .salary-range { background: #F5F0FF; border-radius: 8px; padding: 12px 16px; border: 1px solid #E8D5FF; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+  .salary-range:hover { box-shadow: 0 2px 8px rgba(106, 27, 154, 0.1); }
+  .range-label { font-size: 15px; font-weight: 700; color: #4A148C; }
+  .range-count { font-size: 13px; color: #7B1FA2; }
+  .range-source { font-size: 11px; color: #B39DDB; }
+  .range-source a { color: #9B59B6; text-decoration: none; }
+  
+  .job-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
+  .job-table th { background: #F5F0FF; padding: 10px 12px; text-align: left; font-weight: 600; color: #4A148C; border-bottom: 2px solid #E8D5FF; }
+  .job-table td { padding: 10px 12px; border-bottom: 1px solid #E8D5FF; color: #3c4043; }
+  .job-table tr:hover { background: #F5F0FF; }
+  .job-table a { color: #9B59B6; text-decoration: none; }
+  .job-table a:hover { text-decoration: underline; }
+  
+  .report-insight { background: #FFF9C4; border: 1px solid #FFD54F; border-radius: 10px; padding: 16px; margin-top: 16px; }
+  .insight-title { font-size: 14px; font-weight: 700; color: #F57F17; margin-bottom: 8px; }
+  .insight-content { font-size: 13px; color: #4A148C; line-height: 1.6; }
+  
+
+  /* Typing */
+  .typing { display: flex; gap: 6px; padding: 8px 0; align-items: center; }
+  .typing span { width: 8px; height: 8px; background: #D1C4E9; border-radius: 50%; animation: typing 1.4s infinite; }
+  .typing span:nth-child(2) { animation-delay: 0.2s; background: #9B59B6; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; background: #6A1B9A; }
+  @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+  
+  /* Countdown */
+  .countdown { font-size: 12px; color: #9B59B6; margin-left: 8px; font-weight: 500; }
+
+  /* Parsing overlay */
+  .parsing-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(245, 240, 255, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+  .spinner { width: 48px; height: 48px; border: 4px solid #E8D5FF; border-top-color: #9B59B6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .parsing-text { font-size: 14px; color: #6A1B9A; font-weight: 500; }
+
+  /* 可爱的装饰动画 */
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+  
+  .hidden { display: none !important; }
+
+  /* 响应式设计 */
+  @media (max-width: 768px) {
+    .home-screen { padding: 16px; }
+    .func-grid { grid-template-columns: 1fr; max-width: 100%; }
+    .func-card { padding: 20px 16px; }
+    .home-greeting h2 { font-size: 20px; }
+    .home-greeting p { font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+  <!-- 可爱装饰元素 -->
+  <div class="deco-dot"></div>
+  <div class="deco-dot"></div>
+  <div class="deco-dot"></div>
+  
+  <!-- 小贴纸装饰 -->
+  <div style="position:fixed;top:8%;right:3%;font-size:20px;opacity:0.2;animation:float 7s ease-in-out infinite;pointer-events:none;z-index:0;">💜</div>
+  <div style="position:fixed;bottom:10%;left:3%;font-size:18px;opacity:0.15;animation:float 9s ease-in-out infinite reverse;pointer-events:none;z-index:0;">✨</div>
+  <div style="position:fixed;top:40%;right:5%;font-size:16px;opacity:0.12;animation:float 6s ease-in-out infinite 1s;pointer-events:none;z-index:0;">🎯</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" id="back-btn" onclick="goHome()">&#8592; 返回</button>
+    <h1>职引</h1>
+  </div>
+  <span class="api-status" id="api-status">检查中...</span>
+</div>
+
+<!-- Screen 1: Home -->
+<div class="home-screen" id="screen-home">
+  <!-- 首页可爱贴纸 -->
+  <div style="position:absolute;bottom:30px;right:40px;font-size:80px;opacity:0.08;pointer-events:none;z-index:0;animation:float 10s ease-in-out infinite;">🎓</div>
+  <div style="position:absolute;top:100px;left:30px;font-size:50px;opacity:0.06;pointer-events:none;z-index:0;animation:float 8s ease-in-out infinite reverse;">💼</div>
+  
+  <div class="home-greeting">
+    <h2>你好，我是职引</h2>
+    <p>你的AI求职智能匹配助手，请选择你需要的服务</p>
+  </div>
+  <!-- 首页演示模式提示 -->
+  <div class="demo-notice" id="demo-notice-home" style="display: none; margin: 0 20px 16px; border-radius: 12px;">
+    <span class="demo-notice-icon">📹</span>
+    <span class="demo-notice-text">当前为<span class="demo-highlight">演示模式</span>（服务器离线，展示模拟数据）。请观看<span class="demo-highlight">演示视频</span>（见提交材料）了解真实AI效果（LLM集成、实时分析）。</span>
+  </div>
+  <div class="func-grid">
+    <div class="func-card" onclick="selectFunc('match')">
+      <div class="func-icon">&#127919;</div>
+      <div class="func-title">🎯 岗位智能匹配</div>
+      <div class="func-desc">上传简历，AI为你匹配最合适的岗位，分析匹配度与补强建议</div>
+    </div>
+    <div class="func-card" onclick="selectFunc('resume')">
+      <div class="func-icon">&#128221;</div>
+      <div class="func-title">✏️ 简历优化诊断</div>
+      <div class="func-desc">AI分析简历不足，给出针对性改进建议和改写示例</div>
+    </div>
+    <div class="func-card" onclick="selectFunc('market')">
+      <div class="func-icon">&#128202;</div>
+      <div class="func-title">📊 同背景去向</div>
+      <div class="func-desc">了解同背景求职者的就业去向、城市分布和薪资水平</div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 2: Resume Upload (岗位匹配专用) -->
+<div class="resume-screen" id="screen-resume">
+  <div class="resume-step">
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <!-- Step 1: Upload -->
+    <div id="resume-step1">
+      <div class="resume-title">上传你的简历</div>
+      <div class="resume-subtitle">AI将自动提取简历中的关键信息，然后让你确认和补充</div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+        <div class="upload-icon">&#128196;</div>
+        <div class="upload-text">点击上传或拖拽文件到此处</div>
+        <div class="upload-hint">支持 .txt / .pdf / .doc / .docx 格式</div>
+      </div>
+      <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx" style="display:none" onchange="handleFile(this.files[0])">
+      <div id="upload-result" class="hidden"></div>
+      <div class="or-divider">或者直接粘贴简历内容</div>
+      <textarea class="paste-area" id="paste-area" placeholder="将简历文字内容粘贴到此处..."></textarea>
+      <div class="btn-row">
+        <button class="action-btn primary" id="parse-btn" onclick="parseResume()" disabled>AI 解析简历</button>
+        <button class="action-btn secondary" onclick="skipResume()">跳过，手动填写</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm Info -->
+    <div id="resume-step2" class="hidden">
+      <div class="resume-title">确认你的信息</div>
+      <div class="resume-subtitle">AI已从简历中提取以下信息，请检查并补充缺失项（点击文字可直接编辑）</div>
+      <div class="info-card">
+        <div class="info-section">
+          <div class="info-label">学历背景</div>
+          <div class="info-value" contenteditable="true" id="info-edu">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">技术技能</div>
+          <div class="info-value" contenteditable="true" id="info-skills">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">项目经历</div>
+          <div class="info-value" contenteditable="true" id="info-projects">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">实习/工作经历</div>
+          <div class="info-value" contenteditable="true" id="info-intern">未识别</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">期望薪资范围</div>
+          <div class="info-value" contenteditable="true" id="info-salary">未填写</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">意向城市</div>
+          <div class="info-value" contenteditable="true" id="info-city">未填写</div>
+        </div>
+        <div class="info-section">
+          <div class="info-label">求职方向</div>
+          <div class="info-value" contenteditable="true" id="info-direction">未填写</div>
+        </div>
+      </div>
+      <div class="edit-hint">&#9998; 点击任意字段可直接编辑内容</div>
+      <div class="btn-row">
+        <button class="action-btn secondary" onclick="goResumeStep1()">&#8592; 重新上传</button>
+        <button class="action-btn primary" id="confirm-btn" onclick="confirmInfo()">确认信息，开始匹配</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen 3: Chat -->
+<div class="chat-screen" id="screen-chat">
+  <div class="func-banner" id="func-banner">
+    <span id="func-banner-icon">&#127919;</span>
+    <span id="func-banner-text">岗位智能匹配</span>
+  </div>
+  <!-- 演示模式提示横幅 -->
+  <div class="demo-notice" id="demo-notice" style="display: none;">
+    <span class="demo-notice-icon">📹</span>
+    <span class="demo-notice-text">当前为<span class="demo-highlight">演示模式</span>（模拟数据）。请观看<span class="demo-highlight">演示视频</span>（见提交材料）了解真实AI效果（LLM集成、实时分析）。</span>
+  </div>
+  <div class="chat-container" id="chat-messages"></div>
+  <div class="input-area">
+    <textarea id="chat-input" placeholder="输入你的问题..." oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitMsg();}"></textarea>
+    <button class="send-btn" id="send-btn" onclick="submitMsg()">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ===== Global State =====
+let currentFunc = null;
+let apiConnected = false;
+let isSending = false;
+const sessionId = 'session_' + Date.now();
+
+// ===== Screen Navigation =====
+function showScreen(name) {
+  document.getElementById('screen-home').style.display = name === 'home' ? 'flex' : 'none';
+  document.getElementById('screen-resume').style.display = name === 'resume' ? 'flex' : 'none';
+  document.getElementById('screen-chat').style.display = name === 'chat' ? 'flex' : 'none';
+  document.getElementById('back-btn').style.display = name === 'home' ? 'none' : 'inline-block';
+}
+
+function goHome() {
+  currentFunc = null;
+  showScreen('home');
+}
+
+function selectFunc(func) {
+  currentFunc = func;
+  if (func === 'match' || func === 'resume' || func === 'market') {
+    resetResumeFlow();
+    showScreen('resume');
+  } else {
+    enterChat(func);
+  }
+}
+
+// ===== Resume Flow =====
+function resetResumeFlow() {
+  document.getElementById('file-input').value = '';
+  document.getElementById('paste-area').value = '';
+  document.getElementById('parse-btn').disabled = true;
+  document.getElementById('upload-result').classList.add('hidden');
+  document.getElementById('upload-result').innerHTML = '';
+  document.getElementById('resume-step1').classList.remove('hidden');
+  document.getElementById('resume-step2').classList.add('hidden');
+  document.getElementById('dot1').className = 'step-dot active';
+  document.getElementById('dot2').className = 'step-dot';
+  document.getElementById('dot3').className = 'step-dot';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+var uploadedFileName = '';
+
+function handleFile(file) {
+  if (!file) return;
+  var resultEl = document.getElementById('upload-result');
+  resultEl.classList.remove('hidden');
+  resultEl.innerHTML = '<div class="upload-success"><span class="check">&#10003;</span><span>' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)</span></div>';
+
+  if (file.name.endsWith('.txt')) {
+    // txt 直接在浏览器读取
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('paste-area').value = e.target.result;
+      document.getElementById('parse-btn').disabled = false;
+      uploadedFileName = file.name;
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    // PDF / DOC / DOCX 上传到后端解析
+    uploadedFileName = file.name;
+    document.getElementById('parse-btn').disabled = true;
+    document.getElementById('parse-btn').textContent = '上传解析中...';
+
+    if (!apiConnected) {
+      // 演示模式：使用模拟简历数据
+      setTimeout(function() {
+        var demoText = getDemoResumeText();
+        document.getElementById('paste-area').value = demoText;
+        resultEl.innerHTML = '<div class="upload-success"><span class="check">&#10003;</span><span>' + file.name + ' — 演示模式：已加载示例简历 (' + demoText.length + ' 字)</span></div>';
+        document.getElementById('parse-btn').disabled = false;
+        document.getElementById('parse-btn').textContent = 'AI 解析简历';
+      }, 800);
+      return;
+    }
+
+    var formData = new FormData();
+    formData.append('resume', file);
+
+    fetch('/api/upload-resume', {
+      method: 'POST',
+      body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; ' + data.error + '</div>';
+      } else {
+        document.getElementById('paste-area').value = data.text;
+        resultEl.innerHTML = '<div class="upload-success"><span class="check">&#10003;</span><span>' + file.name + ' — 解析成功，已提取 ' + data.text.length + ' 字</span></div>';
+      }
+      document.getElementById('parse-btn').disabled = !document.getElementById('paste-area').value.trim();
+      document.getElementById('parse-btn').textContent = 'AI 解析简历';
+    })
+    .catch(function(err) {
+      resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; 上传失败：' + err.message + '</div>';
+      document.getElementById('parse-btn').disabled = true;
+      document.getElementById('parse-btn').textContent = 'AI 解析简历';
+    });
+  }
+}
+
+document.getElementById('paste-area').addEventListener('input', function() {
+  document.getElementById('parse-btn').disabled = !this.value.trim();
+});
+
+async function parseResume() {
+  var text = document.getElementById('paste-area').value.trim();
+  if (!text) return;
+
+  showParsingOverlay('AI正在解析你的简历...');
+  console.log('[parseResume] apiConnected=', apiConnected, 'textLength=', text.length);
+
+  // 演示模式：使用模拟解析结果
+  if (!apiConnected) {
+    setTimeout(function() {
+      hideParsingOverlay();
+      var mockParsed = {
+        edu: '香港城市大学 市场营销硕士',
+        skills: 'Python / 数据分析 / PS / 剪映 / 社交媒体运营 / 内容策划',
+        projects: 'AI智能体课程项目 - 设计并实现求职匹配系统',
+        intern: '某互联网公司市场部实习生 - 负责新媒体内容运营与数据分析（3个月）',
+        salary: '12K-18K',
+        city: '上海、深圳、杭州',
+        direction: '产品经理 / 运营专员'
+      };
+      showConfirmStep(mockParsed);
+    }, 2000);
+    return;
+  }
+
+  try {
+    var res = await fetch('/api/parse-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resumeText: text, sessionId: sessionId })
+    });
+    var data = await res.json();
+    console.log('[parseResume] response:', data);
+
+    if (data.error) throw new Error(data.error);
+    if (!data.parsed) throw new Error('后端未返回解析数据');
+
+    hideParsingOverlay();
+    showConfirmStep(data.parsed);
+  } catch (err) {
+    console.error('[parseResume] error:', err);
+    hideParsingOverlay();
+    // 显示错误提示在页面上
+    var resultEl = document.getElementById('upload-result');
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = '<div style="color:#c5221f;font-size:13px;padding:10px;">&#9888; 解析失败：' + err.message + '<br>已切换到本地解析，请检查并补充信息。</div>';
+    showConfirmStep(localParseResume(text));
+  }
+}
+
+function localParseResume(text) {
+  var info = { edu: '', skills: '', projects: '', intern: '', salary: '', city: '', direction: '' };
+  var eduMatch = text.match(/[\u4e00-\u9fa5]*[\u5927\u5b66\u5b66\u9662][\u4e00-\u9fa5]*/);
+  if (eduMatch) info.edu = eduMatch[0];
+  var skillKeywords = ['Java', 'Python', 'C++', 'JavaScript', 'SQL', 'Spring', 'React', 'Vue', 'MySQL', 'Redis', 'Docker', 'Git'];
+  var found = skillKeywords.filter(function(s) { return text.includes(s); });
+  if (found.length > 0) info.skills = found.join(' / ');
+  return info;
+}
+
+function showParsingOverlay(msg) {
+  var overlay = document.createElement('div');
+  overlay.className = 'parsing-overlay';
+  overlay.id = 'parsing-overlay';
+  overlay.innerHTML = '<div class="spinner"></div><div class="parsing-text">' + msg + '</div>';
+  document.body.appendChild(overlay);
+}
+
+function hideParsingOverlay() {
+  var el = document.getElementById('parsing-overlay');
+  if (el) el.remove();
+}
+
+function showConfirmStep(parsedInfo) {
+  document.getElementById('resume-step1').classList.add('hidden');
+  document.getElementById('resume-step2').classList.remove('hidden');
+  document.getElementById('dot1').className = 'step-dot done';
+  document.getElementById('dot2').className = 'step-dot active';
+
+  var fields = ['edu', 'skills', 'projects', 'intern', 'salary', 'city', 'direction'];
+  var defaults = ['未识别', '未识别', '未识别', '未识别', '未填写', '未填写', '未填写'];
+  for (var i = 0; i < fields.length; i++) {
+    var val = parsedInfo[fields[i]];
+    document.getElementById('info-' + fields[i]).textContent = (val && val.trim()) ? val.trim() : defaults[i];
+  }
+
+  // 动态设置确认按钮文字
+  var confirmBtn = document.getElementById('confirm-btn');
+  if (currentFunc === 'resume') {
+    confirmBtn.textContent = '确认信息，开始诊断';
+  } else if (currentFunc === 'market') {
+    confirmBtn.textContent = '确认信息，开始分析';
+  } else {
+    confirmBtn.textContent = '确认信息，开始匹配';
+  }
+}
+
+function goResumeStep1() {
+  document.getElementById('resume-step1').classList.remove('hidden');
+  document.getElementById('resume-step2').classList.add('hidden');
+  document.getElementById('dot1').className = 'step-dot active';
+  document.getElementById('dot2').className = 'step-dot';
+}
+
+function skipResume() {
+  showConfirmStep({ edu: '', skills: '', projects: '', intern: '', salary: '', city: '', direction: '' });
+}
+
+async function confirmInfo() {
+  var userInfo = {
+    edu: document.getElementById('info-edu').textContent.trim(),
+    skills: document.getElementById('info-skills').textContent.trim(),
+    projects: document.getElementById('info-projects').textContent.trim(),
+    intern: document.getElementById('info-intern').textContent.trim(),
+    salary: document.getElementById('info-salary').textContent.trim(),
+    city: document.getElementById('info-city').textContent.trim(),
+    direction: document.getElementById('info-direction').textContent.trim()
+  };
+
+  document.getElementById('dot2').className = 'step-dot done';
+  document.getElementById('dot3').className = 'step-dot active';
+
+  if (apiConnected) {
+    try {
+      await fetch('/api/set-context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: currentFunc })
+      });
+    } catch (e) {
+      console.error('set-context error:', e);
+    }
+  }
+
+  enterChat(currentFunc, userInfo);
+}
+
+// ===== Chat =====
+function enterChat(func, userInfo) {
+  currentFunc = func;
+  var banners = {
+    match: { icon: '&#127919;', text: '岗位智能匹配' },
+    resume: { icon: '&#128221;', text: '简历优化诊断' },
+    market: { icon: '&#128202;', text: '同背景去向分析' }
+  };
+  var b = banners[func] || banners.match;
+  document.getElementById('func-banner-icon').innerHTML = b.icon;
+  document.getElementById('func-banner-text').textContent = b.text;
+  document.getElementById('chat-messages').innerHTML = '';
+
+  var welcome = '';
+  if (func === 'match') {
+    if (userInfo) {
+      // 已确认信息，直接进入匹配流程
+      showScreen('chat');
+      addMessage('ai', '正在为你匹配可投递的岗位，预计需要60秒，请稍候...');
+      showTyping(60);
+
+      // 设置上下文（供后续对话使用）
+      if (apiConnected) {
+        fetch('/api/set-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: 'match' })
+        }).catch(function(e) { console.error('set-context error:', e); });
+      }
+
+      autoMatchJobs(userInfo);
+      return;
+    } else {
+      welcome = '你好！我是你的<strong>岗位匹配助手</strong>。请告诉我你的背景信息，我来帮你匹配最合适的岗位。<br><br>你可以告诉我：学历和专业、技术技能、项目和实习经历、期望薪资和意向城市';
+    }
+  } else if (func === 'resume') {
+    if (userInfo) {
+      // 已确认信息，自动开始诊断
+      showScreen('chat');
+      addMessage('ai', '正在为你诊断简历，预计需要60秒，请稍候...');
+      showTyping(60);
+
+      // 设置上下文
+      if (apiConnected) {
+        fetch('/api/set-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: 'resume' })
+        }).catch(function(e) { console.error('set-context error:', e); });
+      }
+
+      autoDiagnoseResume(userInfo);
+      return;
+    } else {
+      welcome = '你好！我是你的<strong>简历优化助手</strong>。请上传你的简历或告诉我你想优化哪个部分，我会给出具体的改进建议和改写示例。';
+    }
+  } else if (func === 'market') {
+    if (userInfo) {
+      // 已确认信息，自动开始同背景去向分析
+      showScreen('chat');
+      addMessage('ai', '正在为你分析同背景求职者的去向情况，预计需要60秒，请稍候...');
+      showTyping(60);
+
+      // 设置上下文
+      if (apiConnected) {
+        fetch('/api/set-context', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId, userInfo: userInfo, func: 'market' })
+        }).catch(function(e) { console.error('set-context error:', e); });
+      }
+
+      autoBackgroundAnalysis(userInfo);
+      return;
+    } else {
+      welcome = '你好！我是你的<strong>同背景去向分析助手</strong>。请告诉我你的背景信息，我来帮你分析同背景求职者的就业去向、城市分布和薪资水平。<br><br>例如：<br>• "同背景的同学都去了哪些城市"<br>• "同背景的求职者薪资一般多少"';
+    }
+  }
+
+  addMessage('ai', welcome);
+  showScreen('chat');
+  document.getElementById('chat-input').focus();
+}
+
+// ===== Demo Mode Data（服务器离线时的演示数据）=====
+var DEMO_MODE = true; // 离线时启用演示模式
+var demoResponses = {
+  match: `
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">🎯 产品经理（应届生方向）</span><span class="match-badge match-high">高匹配 92%</span></div>
+  <div class="job-meta">💰 15K-25K · 📍 上海/深圳/北京</div>
+  <div class="tags"><span class="tag">产品思维</span><span class="tag">数据分析</span><span class="tag">用户研究</span></div>
+  <div style="margin-top:8px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;">
+    <b style="color:#137333;">✅ 匹配理由：</b>你的市场营销硕士背景+数据分析能力+AI项目经验，与产品经理岗位的核心要求高度吻合。特别是你的AI智能体开发经历，在AI产品赛道极具竞争力。
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;">立即投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">💡 AI产品运营专员</span><span class="match-badge match-high">高匹配 88%</span></div>
+  <div class="job-meta">💰 12K-20K · 📍 杭州/上海/广州</div>
+  <div class="tags"><span class="tag">AI工具应用</span><span class="tag">内容运营</span><span class="tag">竞品分析</span></div>
+  <div style="margin-top:8px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;">
+    <b style="color:#137333;">✅ 匹配理由：</b>你熟悉ChatGPT/文心一言等AI工具，加上新媒体运营实习经验和内容策划能力，完全契合当前企业对"AI+运营"复合型人才的需求。
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;">立即投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">📊 数据分析师（入门级）</span><span class="match-badge match-mid">中匹配 68%</span></div>
+  <div class="job-meta">💰 10K-18K · 📍 北京/成都/武汉</div>
+  <div class="tags"><span class="tag">Excel/PPT</span><span class="tag">Python基础</span><span class="tag">数据可视化</span></div>
+  <div style="margin-top:8px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;">
+    <b style="color:#b06000;">⚠️ 部分匹配：</b>你有基础的数据分析能力，但Python和SQL深度不够。<br><b style="color:#c5221f;">→ 建议：补充SQL查询能力 + 学习Tableau/PowerBI可视化工具，可提升至高匹配。</b>
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;" style="background:linear-gradient(135deg,#9B59B6,#B39DDB);">提升后投递 →</a>
+</div>
+
+<div class="job-card">
+  <div class="job-card-header"><span class="job-title">✍️ 新媒体内容策划</span><span class="match-badge match-mid">中匹配 72%</span></div>
+  <div class="job-meta">💰 8K-15K · 📍 全国多地</div>
+  <div class="tags"><span class="tag">文案写作</span><span class="tag">视频剪辑</span><span class="tag">创意策划</span></div>
+  <div style="margin-top:8px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;">
+    <b style="color:#b06000;">⚠️ 部分匹配：</b>实习中的公众号运营经验直接相关，但该岗位薪资天花板较低。<br><b style="color:#c5221f;">→ 建议：作为保底选项优先投递，同时冲刺产品/AI运营类高薪岗位。</b>
+  </div>
+  <a class="apply-btn" href="#" onclick="return false;" style="background:linear-gradient(135deg,#9B59B6,#B39DDB);">保底投递 →</a>
+</div>
+
+<br>
+<div style="background:linear-gradient(135deg,#F5F0FF,#E8D5FF);border-radius:12px;padding:16px;margin-top:16px;">
+<h4 style="color:#4A148C;margin-bottom:10px;">🔍 综合匹配分析与建议</h4>
+<table style="width:100%;font-size:13px;border-collapse:collapse;">
+<tr style="background:#E8D5FF;"><td style="padding:6px 10px;"><b>你的核心优势</b></td><td style="padding:6px 10px;">硕士学历 / AI工具经验 / 全栈运营能力 / 数据敏感度</td></tr>
+<tr><td style="padding:6px 10px;"><b>需提升项</b></td><td style="padding:6px 10px;">SQL进阶 / 产品原型设计(Figma) / A/B测试方法论</td></tr>
+<tr style="background:#E8D5FF;"><td style="padding:6px 10px;"><b>推荐投递策略</b></td><td style="padding:6px 10px;">高匹配(2个)优先投递 → 中匹配(2个)补充技能后跟进</td></tr>
+<tr><td style="padding:6px 10px;"><b>最佳求职时间窗口</b></td><td style="padding:6px 10px;">秋招提前批(7-8月) > 秋招正式批(9-11月) > 春招(2-4月)</td></tr>
+</table>
+</div>`,
+
+  resume: `<div class="diagnose-report">
+<h3 style="color:#4A148C;margin-bottom:14px;">📋 简历诊断报告 — AI智能分析结果</h3>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">📊 综合评分：<span style="font-size:24px;color:#6A1B9A;margin-left:8px;">72</span><span style="font-size:14px;color:#999;"> / 100</span></b>
+<div class="diagnose-score-bar"><div class="diagnose-score-fill" style="width:72%"></div></div>
+<div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+<span style="font-size:11px;padding:3px 10px;background:#E8F5E9;border-radius:12px;color:#2E7D32;">教育背景 ★★★★★</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFF3E0;border-radius:12px;color:#EF6C00;">技能广度 ★★★☆☆</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFEBEE;border-radius:12px;color:#C62828;">量化成果 ★★☆☆☆</span>
+<span style="font-size:11px;padding:3px 10px;background:#FFF3E0;border-radius:12px;color:#EF6C00;">项目深度 ★★★☆☆</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#137333;font-size:15px;">✅ 你的优势亮点（保持！）</b>
+<div class="issue-item issue-good">
+<b>🎓 教育背景突出</b> — 香港城市大学硕士学位，985/211本硕背景在简历筛选阶段具有明显优势，建议放在最显眼位置
+</div>
+<div class="issue-item issue-good">
+<b>🤖 AI项目经验稀缺且加分</b> — "AI求职智能匹配系统开发"是非常亮眼的项目经历，体现了技术理解力+产品思维+执行力，是差异化竞争优势
+</div>
+<div class="issue-item issue-good">
+<b>📈 实习有量化意识雏形</b> — "阅读量突破5万+"、"覆盖2000+学生"已经体现数据思维，这是HR非常看重的点
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#c5221f;font-size:15px;">⚠️ 关键问题（必须修改！按紧急程度排序）</b>
+<div class="issue-item issue-error" style="border-left:4px solid #c5221f;">
+<b style="font-size:14px;">❶ 缺少量化成果（影响最大）</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">几乎所有经历的描述都缺少可衡量的数字。HR在每份简历上停留时间仅<strong>6-10秒</strong>，数字是最快抓住眼球的方式。</p>
+<span class="fix-hint">→ 改法示例："负责公众号运营" 改为 "独立负责公众号运营，<b>3个月产出20篇原创文章，累计阅读量<b style="color:#137333;">5W+</b>，粉丝增长<b style="color:#137333;">40%</b>"</b></span>
+</div>
+<div class="issue-item issue-error">
+<b style="font-size:14px;">❷ 项目描述缺乏结构化</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">AI项目经历只写了做了什么，没写清楚<strong>解决了什么问题、用了什么方法、达到了什么效果</strong>。面试官会追问细节。</p>
+<span class="fix-hint">→ 建议用 <b>STAR法则</b>重构：情境(S)→任务(T)→行动(A)→结果(R)，每个项目控制在3-4行</span>
+</div>
+<div class="issue-item issue-warn">
+<b style="font-size:14px;">❸ 简历未针对岗位定制</b>
+<p style="margin:6px 0 0 0;line-height:1.7;">目前是"一份简历打天下"。不同岗位（产品vs运营vs数据）关注的关键词完全不同，需要准备<strong>2-3个版本</strong>。</p>
+<span class="fix-hint">→ 投产品岗时突出"用户研究"、"需求分析"；投运营岗时突出"数据驱动"、"增长实验"</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">💡 具体改写示例</b>
+<div class="rewrite-card">
+<b style="color:#666;">▎原句（平淡无奇）：</b><br>
+<span style="color:#999;">"协助运营官方公众号及小红书账号，参与新品上市的市场调研工作"</span>
+<br><br>
+<b style="color:#137333;">▎优化后（有冲击力）：</b><br>
+<span style="line-height:1.8;">独立负责双平台账号运营，<b>3个月内产出原创文章20篇</b>（含2篇10W+爆文），累计阅读量突破<b>5W+</b>，粉丝增长<b>40%</b>；<br>
+主导新品上市调研，收集并分析<b>500+条</b>用户反馈，输出竞品对比报告，为定价策略提供数据支撑。</span>
+</div>
+</div>
+
+<div class="diagnose-section">
+<b style="color:#6A1B9A;font-size:15px;">🎯 总体改进路线图</b>
+<table class="job-table">
+<tr><th>优先级</th><th>改进动作</th><th>预计效果</th><th>耗时</th></tr>
+<tr><td style="color:#c5221f;font-weight:700;">P0 紧急</td><td>所有经历添加量化数字</td><td>评分 +10~15</td><td>1小时</td></tr>
+<tr><td style="color:#ef6c00;font-weight:700;">P1 重要</td><td>AI项目用STAR重写</td><td>评分 +5~8</td><td>30分钟</td></tr>
+<tr><td style="color:#ef6c00;font-weight:700;">P1 重要</td><td>准备2-3版定向简历</td><td>初筛通过率 +30%</td><td>1小时</td></tr>
+<tr><td style="color:#1565c0;font-weight:700;">P2 建议</td><td>补充GitHub/作品集链接</b></td><td>技术岗加分</td><td>30分钟</td></tr>
+</table>
+</div>
+
+<p style="color:#7B1FA2;font-size:13px;text-align:center;margin-top:14px;">📌 以上为AI基于数百份优秀简历样本训练得出的诊断结果。修改后的简历预计可将初筛通过率从 ~20% 提升至 ~50%+</p>
+</div>`,
+
+  market: `<div class="background-report">
+<h3 style="color:#4A148C;margin-bottom:14px;font-size:18px;">📊 同背景求职者去向分析报告</h3>
+<div class="report-summary">
+<b>📌 分析对象：</b>与你背景相似的应届毕业生群体（同学历/同专业/同届）
+<br><b>⏱️ 数据时效：</b>综合近期招聘市场数据 + 往届就业去向统计
+<br><b>🔒 可信度说明：</b>城市分布基于公开就业质量报告；薪资区间基于招聘平台大数据；岗位占比基于行业调研
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">🏙️ 主要去向城市 TOP 5</b>
+<div class="city-grid">
+<div class="city-card"><b>上海</b><div class="city-pct">28%</div><small>金融/互联网/咨询/外企</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 14K-20K</span></div>
+<div class="city-card"><b>北京</b><div class="city-pct">24%</div><small>互联网/国企/央企/科技</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 13K-19K</span></div>
+<div class="city-card"><b>深圳</b><div class="city-pct">18%</div><small>科技/金融/跨境贸易</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 14K-21K</span></div>
+<div class="city-card"><b>杭州</b><div class="city-pct">12%</div><small>电商/AI/新零售</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 12K-17K</span></div>
+<div class="city-card"><b>广州</b><div class="city-pct">8%</div><small>贸易/快消/制造总部</small><br><span style="font-size:10px;color:#9B59B6;">平均起薪: 10K-15K</span></div>
+</div>
+<div style="margin-top:10px;padding:10px;background:#FFF9C4;border-radius:8px;font-size:12px;color:#7B1FA2;">
+💡 <b>城市选择建议：</b>上海+深圳组合占46%，是本专业就业密度最高的区域。如果追求高薪和发展空间，首选上海或深圳；如果考虑生活成本，杭州的性价比最优。
+</div>
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">💰 薪资分布区间（月薪，税前）</b>
+<div class="salary-ranges">
+<div class="salary-range"><span class="salary-label">一线城市（北上深）</span><span class="salary-value" style="font-weight:700;color:#137333;">10K - 18K</span><small style="color:#999;">（中位数约14K）</small></div>
+<div class="salary-range"><span class="salary-label">新一线城市（杭州成都南京）</span><span class="salary-value" style="font-weight:700;color:#137333;">8K - 15K</span><small style="color:#999;">（中位数约11K）</small></div>
+<div class="salary-range"><span class="salary-label">其他城市</span><span class="salary-value" style="font-weight:700;color:#ef6c00;">6K - 12K</span><small style="color:#999;">（中位数约8K）</small></div>
+</div>
+<div style="margin-top:10px;padding:10px;background:#F5F0FF;border-radius:8px;font-size:12px;color:#4A148C;">
+📊 <b>薪资谈判参考：</b>以你的背景，首份工作建议报价区间 <b style="color:#137333;">12K-16K</b>（一线城市）。低于12K说明岗位价值被低估，高于16K需要有突出的项目/实习背书。
+</div>
+</div>
+
+<div class="report-section">
+<b style="color:#6A1B9A;font-size:16px;">🏢 主要岗位方向分布</b>
+<table class="job-table">
+<tr><th>岗位类型</th><th>占比</th><th>典型公司</th><th>起薪范围</th></tr>
+<tr><td><b>产品/运营类</b></td><td><b style="color:#6A1B9A;">32%</b></td><td>字节、腾讯、阿里、美团、京东</td><td>12K-22K</td></tr>
+<tr><td><b>数据分析/商业分析</b></td><td><b style="color:#6A1B9A;">24%</b></td><td>网易、滴滴、B站、小红书</td><td>11K-19K</td></tr>
+<tr><td><b>市场营销/品牌管理</b></td><td><b style="color:#6A1B9A;">20%</b></td><td>欧莱雅、联合利华、宝洁、耐克</td><td>10K-16K</td></tr>
+<tr><td><b>咨询/管培生</b></td><td><b style="color:#6A1B9A;">15%</b></td><td>MBB四大、快消管培、银行管培</td><td>14K-25K</td></tr>
+<tr><td><b>其他</b>（考公/留学/创业）</td><td>9%</td><td>—</td><td>—</td></tr>
+</table>
+</div>
+
+<div class="report-insight">
+<b style="font-size:15px;">💡 职引AI洞察（基于你的个人背景定制）</b>
+<br><br>
+<b style="color:#137333;">① 最具竞争力的方向：</b>你的「AI项目开发经验」在当前市场上非常稀缺，建议重点瞄准 <b>A产品经理（AI方向）</b> 或 <b>B AI运营专员</b> 岗位，这两个方向能最大化发挥你的独特优势。
+<br><br>
+<b style="color:#1565c0;">② 最佳城市组合：</b><b>上海（主战场）+ 深圳（备选）</b>。上海外企和互联网公司最多，适合你的专业背景；深圳AI创业生态活跃，适合有技术倾向的你。
+<br><br>
+<b style="color:#ef6c00;">③ 薪资预期锚定：</b>首份工作不要好高骛远也不要低估自己。<b>14K左右</b>是一个合理的起点——既不会因要价过高被过滤掉，也给自己留出了成长空间。
+<br><br>
+<b style="color:#c5221f;">④ 时间线提醒：</b>秋招黄金期在 <b>7-10月</b>，大厂提前批通常从6月底就开始。现在距离秋招还有约3-4个月的准备窗口，建议：<b>先优化简历 → 再刷1-2个项目经验 → 7月开始海投</b>。
+</div>
+</div>`
+};
+
+// 演示模式：模拟简历文本
+function getDemoResumeText() {
+  return [
+    '张三',
+    '',
+    '【教育背景】',
+    '香港城市大学 | 市场营销硕士 | 2024.09 - 2026.06（预计）',
+    '某大学 | 工商管理学士 | 2020.09 - 2024.06',
+    '',
+    '【技能特长】',
+    '编程语言：Python（数据分析）、SQL、基础JavaScript',
+    '工具软件：Excel高级功能、PowerPoint、Photoshop、剪映专业版',
+    '专业技能：社交媒体运营、内容策划与撰写、市场调研与竞品分析、AI工具应用（ChatGPT/文心一言）',
+    '语言能力：普通话（母语）、英语（CET-6 / 雅思6.5）、粤语（流利）',
+    '',
+    '【项目经历】',
+    'AI求职智能匹配系统开发 | 独立开发者 | 2025.01 - 至今',
+    '- 设计并实现基于大模型的AI智能体系统，帮助应届生提升简历初筛命中率',
+    '- 使用Node.js搭建后端API，集成腾讯混元大模型，实现岗位智能匹配功能',
+    '- 完成前端UI设计与开发，采用响应式布局适配多端访问',
+    '- 项目成果：系统可处理PDF/DOC等多种格式简历，支持3大核心功能模块',
+    '',
+    '校园营销活动策划大赛 | 团队队长 | 2024.10 - 2024.12',
+    '- 带领5人团队完成某快消品牌校园推广方案设计，覆盖全校2000+学生',
+    '- 负责整体策略规划、创意构思及执行落地，最终获得校级二等奖',
+    '',
+    '【实习经历】',
+    '某互联网公司 | 市场部实习生 | 2025.07 - 2025.09（3个月）',
+    '- 协助运营官方公众号及小红书账号，3个月内产出原创文章20篇，累计阅读量突破5万+',
+    '- 参与新品上市的市场调研工作，收集并分析用户反馈数据500+条，输出调研报告1份',
+    '- 协助策划线上直播活动2场，单场观看人数超过3000人',
+    '',
+    '【校园经历】',
+    '学生会宣传部 | 部长 | 2022.09 - 2023.06',
+    '- 统筹管理8人团队，负责学院各类活动的宣传物料设计与新媒体推广',
+    '- 主导迎新晚会宣传方案，制作海报及短视频，活动参与人数创历史新高（800+人）',
+    '',
+    '【荣誉奖项】',
+    '校级优秀学生干部、市场营销策划大赛二等奖、学业奖学金（2次）、CET-6证书',
+    '',
+    '【自我评价】',
+    '对互联网产品有浓厚兴趣，具备良好的数据分析能力和文案功底。熟悉AI工具在营销场景中的应用，善于从数据中发现问题并提出解决方案。有较强的学习能力和团队协作精神，期待在产品或运营方向深耕发展。'
+  ].join('\n');
+}
+
+// 自动匹配岗位
+async function autoMatchJobs(userInfo) {
+  if (!apiConnected) {
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.match);
+    }, 2000);
+    return;
+  }
+
+  try {
+    setSending(true);
+    var res = await fetch('/api/match-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInfo: userInfo, sessionId: sessionId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    removeTyping();
+    addMessage('ai', data.reply);
+  } catch (e) {
+    removeTyping();
+    addMessage('ai', '抱歉，岗位匹配请求出错了：' + e.message);
+    console.error('Auto match error:', e);
+  } finally {
+    setSending(false);
+  }
+}
+
+// 自动诊断简历
+async function autoDiagnoseResume(userInfo) {
+  if (!apiConnected) {
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.resume);
+    }, 2500);
+    return;
+  }
+
+  try {
+    setSending(true);
+    var res = await fetch('/api/diagnose-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInfo: userInfo, sessionId: sessionId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    removeTyping();
+    addMessage('ai', data.reply);
+  } catch (e) {
+    removeTyping();
+    addMessage('ai', '抱歉，简历诊断请求出错了：' + e.message);
+    console.error('Auto diagnose error:', e);
+  } finally {
+    setSending(false);
+  }
+}
+
+// 自动同背景去向分析
+async function autoBackgroundAnalysis(userInfo) {
+  if (!apiConnected) {
+    // 演示模式：模拟延迟后显示预设回复
+    setTimeout(function() {
+      removeTyping();
+      addMessage('ai', demoResponses.market);
+    }, 3000);
+    return;
+  }
+
+  try {
+    setSending(true);
+    var res = await fetch('/api/market-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userInfo: userInfo, sessionId: sessionId })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    removeTyping();
+    addMessage('ai', data.reply);
+  } catch (e) {
+    removeTyping();
+    addMessage('ai', '抱歉，同背景去向分析请求出错了：' + e.message);
+    console.error('Auto background analysis error:', e);
+  } finally {
+    setSending(false);
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+async function submitMsg() {
+  if (isSending) return;
+  var el = document.getElementById('chat-input');
+  var text = el.value.trim();
+  if (!text) return;
+  el.value = '';
+  el.style.height = 'auto';
+
+  addMessage('user', text);
+  showTyping();
+  setSending(true);
+
+  try {
+    var reply;
+    if (apiConnected) {
+      var res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId: sessionId, mode: currentFunc })
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      reply = data.reply;
+    } else {
+      reply = getLocalReply(text);
+    }
+    removeTyping();
+    addMessage('ai', reply);
+  } catch (err) {
+    removeTyping();
+    addMessage('ai', '抱歉，请求出错了：' + err.message);
+  } finally {
+    setSending(false);
+  }
+}
+
+function setSending(val) {
+  isSending = val;
+  document.getElementById('send-btn').disabled = val;
+  document.getElementById('chat-input').disabled = val;
+}
+
+function addMessage(role, text) {
+  var container = document.getElementById('chat-messages');
+  var now = new Date();
+  var time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+  // 清理LLM返回的markdown代码标记（如 ```html ... ```）
+  var cleanText = text;
+  if (role === 'ai') {
+    // 去掉开头的 ```html 或 ```
+    cleanText = cleanText.replace(/^```(?:html)?\s*\n?/i, '');
+    // 去掉结尾的 ```
+    cleanText = cleanText.replace(/\n?```\s*$/i, '');
+    // 去掉可能残留的其他代码块标记
+    cleanText = cleanText.trim();
+  }
+
+  var div = document.createElement('div');
+  div.className = 'msg ' + role;
+  var avatar = role === 'ai' ? '<div class="avatar ai">职</div>' : '<div class="avatar user">我</div>';
+  div.innerHTML = avatar + '<div class="bubble"><div class="bubble-inner">' + cleanText + '</div><div class="bubble-time">' + time + '</div></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping(estimatedSeconds) {
+  var container = document.getElementById('chat-messages');
+  var div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-indicator';
+  
+  var countdownHtml = '';
+  if (estimatedSeconds && estimatedSeconds > 0) {
+    countdownHtml = '<span class="countdown" id="countdown-timer">预计 ' + estimatedSeconds + ' 秒</span>';
+  }
+  
+  div.innerHTML = '<div class="avatar ai">职</div><div class="bubble"><div class="bubble-inner"><div class="typing"><span></span><span></span><span></span></div>' + countdownHtml + '</div></div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  
+  // 启动倒计时
+  if (estimatedSeconds && estimatedSeconds > 0) {
+    startCountdown(estimatedSeconds);
+  }
+}
+
+// 倒计时相关
+var countdownInterval = null;
+var countdownRemaining = 0;
+
+function startCountdown(seconds) {
+  countdownRemaining = seconds;
+  updateCountdownDisplay();
+  
+  countdownInterval = setInterval(function() {
+    countdownRemaining -= 5;
+    if (countdownRemaining <= 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      var timerEl = document.getElementById('countdown-timer');
+      if (timerEl) {
+        timerEl.textContent = '处理中，请耐心等待...';
+      }
+    } else {
+      updateCountdownDisplay();
+    }
+  }, 5000); // 每5秒更新一次
+}
+
+function updateCountdownDisplay() {
+  var timerEl = document.getElementById('countdown-timer');
+  if (timerEl) {
+    timerEl.textContent = '预计还需要 ' + countdownRemaining + ' 秒';
+  }
+}
+
+function removeTyping() {
+  // 清除倒计时定时器
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  
+  var el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function fillInput(text) {
+  var el = document.getElementById('chat-input');
+  el.value = text;
+  el.focus();
+  autoResize(el);
+}
+
+// ===== Local Fallback =====
+function getLocalReply(text) {
+  // 演示模式：根据关键词返回智能模拟回复
+  var lower = text.toLowerCase();
+  if (lower.includes('匹配') || lower.includes('岗位') || lower.includes('推荐')) {
+    return '🎯 在演示模式下，你可以点击首页的「岗位智能匹配」卡片，上传或输入你的背景信息后，系统会自动为你展示匹配的岗位卡片（含高/中/低匹配度标签）！<br><br>💡 提示：当前为演示模式，连接真实服务器后可使用AI实时匹配。';
+  }
+  if (lower.includes('简历') || lower.includes('诊断') || lower.includes('优化')) {
+    return '✏️ 在演示模式下，点击「简历优化诊断」功能卡片，上传你的简历后，AI会给出：<br>• 综合评分（满分100）<br>• 优势项分析<br>• 问题定位+改进建议<br>• 简历改写示例<br><br>💡 当前展示的是模拟数据，连接后端服务可获得个性化诊断。';
+  }
+  if (lower.includes('去向') || lower.includes('城市') || lower.includes('薪资') || lower.includes('同背景')) {
+    return '📊 在演示模式下，点击「同背景去向」功能卡片可查看：<br>• 主要去向城市 TOP5 + 占比<br>• 不同城市的薪资分布区间<br>• 岗位方向占比表<br>• AI洞察建议<br><br>⚠️ 数据为综合分析参考值，实际以官方招聘信息为准。';
+  }
+  return '你好！我是<b>职引</b>的演示助手 🎬<br><br>当前运行在<strong>演示模式</strong>下（服务器离线）。你可以体验以下功能：<br><b>1.</b> 点击「🎯 岗位智能匹配」— 查看模拟的岗位推荐<br><b>2.</b> 点击「✏️ 简历优化诊断」— 查看模拟的诊断报告<br><b>3.</b> 点击「📊 同背景去向」— 查看模拟的去向分析报告<br><br>💡 连接后端服务后，以上功能将使用AI实时生成结果。';
+}
+
+// ===== API Status Check =====
+async function checkApiStatus() {
+  var statusEl = document.getElementById('api-status');
+  var demoNotice = document.getElementById('demo-notice');
+  var demoNoticeHome = document.getElementById('demo-notice-home');
+  try {
+    var res = await fetch('/api/health');
+    var data = await res.json();
+    // 服务器在线：隐藏演示模式提示
+    demoNotice.style.display = 'none';
+    demoNoticeHome.style.display = 'none';
+    if (data.apiKeyConfigured) {
+      apiConnected = true;
+      statusEl.textContent = 'LLM已连接';
+      statusEl.className = 'api-status connected';
+    } else {
+      apiConnected = false;
+      statusEl.textContent = '未连接LLM';
+      statusEl.className = 'api-status disconnected';
+    }
+  } catch (e) {
+    // 服务器离线：演示模式，显示提示
+    apiConnected = false;
+    statusEl.textContent = '🎬 演示模式';
+    statusEl.className = 'api-status demo-mode';
+    demoNotice.style.display = 'flex';
+    demoNoticeHome.style.display = 'flex';
+  }
+}
+
+// ===== Init =====
+window.addEventListener('load', async function() {
+  await checkApiStatus();
+  showScreen('home');
+});
+</script>
+
+</body>
+</html>
